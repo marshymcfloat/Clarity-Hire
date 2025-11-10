@@ -13,6 +13,7 @@ import {
 } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { formatPostedDate } from "@/lib/utils";
+import ProgressLink from "../ui/ProgressLink";
 
 interface JobCardProps {
   job: Job;
@@ -21,7 +22,7 @@ interface JobCardProps {
 
 const JobCard = ({ job, companySlug }: JobCardProps) => {
   return (
-    <Link
+    <ProgressLink
       href={`/${companySlug}/available-jobs/${job.id}`}
       className="block h-full"
     >
@@ -56,7 +57,7 @@ const JobCard = ({ job, companySlug }: JobCardProps) => {
           </div>
         </CardFooter>
       </Card>
-    </Link>
+    </ProgressLink>
   );
 };
 

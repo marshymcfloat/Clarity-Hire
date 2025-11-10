@@ -2,7 +2,6 @@
 
 import { Briefcase, ClipboardList } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
-import Link from "next/link";
 
 import {
   Sidebar,
@@ -18,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import UserButton from "./UserButton";
 import { useSession } from "next-auth/react";
+import ProgressLink from "../ui/ProgressLink";
 
 export function AppSidebar() {
   const { companySlug } = useParams();
@@ -66,10 +66,10 @@ export function AppSidebar() {
                           asChild
                           className={cn(isActive && "font-semibold")}
                         >
-                          <Link href={item.url}>
+                          <ProgressLink href={item.url}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                          </Link>
+                          </ProgressLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );
@@ -82,10 +82,10 @@ export function AppSidebar() {
                           asChild
                           className={cn(isActive && "font-semibold")}
                         >
-                          <Link href={item.url}>
+                          <ProgressLink href={item.url}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                          </Link>
+                          </ProgressLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );

@@ -36,7 +36,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useProgressRouter } from "@/hooks/useProgressRouter";
 
 type SlugStatus = "idle" | "checking" | "available" | "taken";
 type CombinedFormData = {
@@ -67,7 +67,7 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
   const [slugSuggestions, setSlugSuggestions] = useState<string[]>([]);
 
   const stepOneState = useSelector((state: RootState) => state.launchCompany);
-  const router = useRouter();
+  const router = useProgressRouter();
   const form = useForm<CompanyCreationStageTwoValues>({
     resolver: zodResolver(companyCreationStageTwoSchema),
     defaultValues: {

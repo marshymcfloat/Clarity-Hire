@@ -1,5 +1,3 @@
-// src/components/CreateQuestionForm.tsx
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -12,7 +10,7 @@ import { toast } from "sonner";
 import {
   Form,
   FormControl,
-  FormDescription, // ✨ NEW: Import FormDescription
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -55,7 +53,7 @@ const CreateQuestionForm = ({ onSuccess }: { onSuccess: () => void }) => {
     onSuccess: (data) => {
       if (data.success) {
         toast.success(data.message || "Question created successfully!");
-        form.reset(); // ✨ UX: Reset form on success
+        form.reset();
         onSuccess();
       } else {
         toast.error(data.error || "Something went wrong.");
