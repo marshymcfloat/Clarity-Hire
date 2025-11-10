@@ -1,5 +1,5 @@
 import CreateCompanyDialog from "@/components/CompanyAuth/CreateCompanyDialog";
-import Link from "next/link";
+import ProgressLink from "@/components/ui/ProgressLink";
 
 const page = () => {
   return (
@@ -20,7 +20,7 @@ const page = () => {
           </h1>
           <p className="text-lg text-slate-500 md:text-xl">
             Seek jobs from these{" "}
-            <Link
+            <ProgressLink
               href={"/companies"}
               className="
                 font-semibold text-slate-800 
@@ -32,7 +32,7 @@ const page = () => {
               "
             >
               companies
-            </Link>
+            </ProgressLink>
           </p>
         </div>
       </div>
