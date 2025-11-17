@@ -1,5 +1,3 @@
-// components/CompanyCard.tsx
-
 import React from "react";
 import Link from "next/link";
 
@@ -14,6 +12,7 @@ import {
 } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import ProgressLink from "../ui/ProgressLink";
 
 type CompanyCardProps = {
   name: string;
@@ -40,9 +39,12 @@ const CompanyCard = ({
           </AvatarFallback>
         </Avatar>
         <div className="flex-grow">
-          <Link href={`/${slug}/available-jobs`} className="hover:underline">
+          <ProgressLink
+            href={`/${slug}/available-jobs`}
+            className="hover:underline"
+          >
             <CardTitle className="text-xl font-bold">{name}</CardTitle>
-          </Link>
+          </ProgressLink>
           <CardDescription className="mt-1 line-clamp-1">
             {location}
           </CardDescription>
@@ -55,7 +57,9 @@ const CompanyCard = ({
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button asChild className="w-full">
-          <Link href={`/${slug}/available-jobs`}>View Jobs</Link>
+          <ProgressLink href={`/${slug}/available-jobs`}>
+            View Jobs
+          </ProgressLink>
         </Button>
       </CardFooter>
     </Card>

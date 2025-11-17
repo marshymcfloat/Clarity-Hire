@@ -20,12 +20,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FaGoogle } from "react-icons/fa";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation"; // Correct import for App Router
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
+import { useProgressRouter } from "@/hooks/useProgressRouter";
 
 const AuthLoginForm = ({ onClose }: { onClose: () => void }) => {
-  const router = useRouter();
+  const router = useProgressRouter();
 
   const form = useForm<AuthLoginValues>({
     resolver: zodResolver(authLoginSchema),
