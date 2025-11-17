@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import TanstackProvider from "@/components/providers/TanstackProvider";
 import ReduxProvider from "@/components/providers/ReduxProvider";
+import TopLoaderWrapper from "@/components/ui/TopLoaderWrapper";
+import "nprogress/nprogress.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +38,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${inter.className}`}
       >
         <ReduxProvider>
-          <TanstackProvider>{children}</TanstackProvider>
+          <TanstackProvider>
+            <TopLoaderWrapper />
+            {children}
+          </TanstackProvider>
         </ReduxProvider>
       </body>
     </html>
