@@ -1,5 +1,3 @@
-// lib/actions/questionActions.ts
-
 "use server";
 
 import { getServerSession } from "next-auth";

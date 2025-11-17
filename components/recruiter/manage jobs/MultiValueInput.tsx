@@ -1,5 +1,3 @@
-// src/components/MultiValueInput.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -8,7 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
-  FormDescription, // ✨ NEW: Import FormDescription
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,7 +21,7 @@ type MultiValueInputProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   as?: "input" | "textarea";
-  description?: string; // ✨ NEW: Add an optional description prop
+  description?: string;
 };
 
 const MultiValueInput = <T extends FieldValues>({
@@ -32,7 +30,7 @@ const MultiValueInput = <T extends FieldValues>({
   label,
   placeholder,
   as = "input",
-  description, // ✨ NEW
+  description,
 }: MultiValueInputProps<T>) => {
   const [inputValue, setInputValue] = useState("");
   const InputComponent = as === "textarea" ? Textarea : Input;

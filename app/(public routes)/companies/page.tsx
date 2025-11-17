@@ -1,6 +1,6 @@
 import CompaniesDataContainer from "@/components/companies/CompaniesDataContainer";
 import CompaniesGridSkeleton from "@/components/companies/CompaniesGridSkeleton";
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 
 const CompaniesPage = () => {
   return (

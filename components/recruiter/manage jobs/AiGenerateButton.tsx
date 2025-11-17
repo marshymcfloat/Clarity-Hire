@@ -1,5 +1,3 @@
-// src/components/AiGenerateButton.tsx
-
 import { Button } from "@/components/ui/button";
 import { RiGeminiLine } from "react-icons/ri";
 

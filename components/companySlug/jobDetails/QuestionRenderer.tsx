@@ -1,5 +1,3 @@
-// File: components/your-path/QuestionRenderer.tsx
-
 "use client";
 
 import { Control, FieldValues, Path } from "react-hook-form";

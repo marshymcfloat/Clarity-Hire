@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Job, JobStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
-import { Edit, Ellipsis, Trash } from "lucide-react";
+import { Ellipsis, Trash } from "lucide-react";
 
 import {
   DropdownMenu,

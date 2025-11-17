@@ -1,6 +1,5 @@
 "use server";
 
-import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/prisma/prisma";
 import { authOptions } from "../auth";

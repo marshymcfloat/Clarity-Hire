@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/card";
 import React from "react";
 
-// trigger redeploy
 const StatCard = ({
   title,
   description,

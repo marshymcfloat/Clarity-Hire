@@ -18,14 +18,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// --- NEW TYPE DEFINITION ---
-// We need to store both the ID and the 'required' state.
 export interface SelectedQuestion {
   questionId: string;
   required: boolean;
 }
 
-// --- PROPS DEFINITION (UPDATED) ---
 interface SelectQuestionProps {
   value: SelectedQuestion[]; // value is now an array of our new type
   onChange: (value: SelectedQuestion[]) => void; // onChange now passes the full object array

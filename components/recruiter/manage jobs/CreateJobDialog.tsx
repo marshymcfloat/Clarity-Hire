@@ -1,5 +1,3 @@
-// src/components/CreateJobDialog.tsx
-
 "use client";
 
 import { useState } from "react";
