@@ -1,5 +1,4 @@
 import { Job } from "@prisma/client";
-import Link from "next/link";
 import { MapPin, TrendingUp, Clock } from "lucide-react";
 
 import { EXPERIENCE_LEVEL_MAP, JOB_TYPE_MAP } from "@/constants";

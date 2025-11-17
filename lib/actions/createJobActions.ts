@@ -16,7 +16,6 @@ export type GenerateSummaryPayload = {
   skills?: string[];
 };
 
-// --- UPDATED: Type for the list generation payload now includes summary ---
 export type GenerateListPayload = {
   fieldName: "qualifications" | "responsibilities";
   jobTitle: string;
@@ -211,11 +210,6 @@ export async function updateJobAction(payload: {
 }) {
   console.log("Updating job with ID:", payload.id);
   console.log("With data:", payload.values);
-  // 1. Validate the payload with your schema
-  // 2. Find the job in the database using payload.id
-  // 3. Update the job with payload.values
-  // 4. Return a success or error message
-  // For now, let's simulate success:
   await new Promise((res) => setTimeout(res, 1000));
   return { success: true, message: "Job updated successfully!" };
 }

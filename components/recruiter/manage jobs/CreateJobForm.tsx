@@ -1,5 +1,3 @@
-// src/components/CreateJobForm.tsx
-
 "use client";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -15,7 +13,6 @@ import type {
   WorkArrangement,
 } from "@prisma/client";
 
-// Libs, Schemas & Constants
 import { createJobSchema, CreateJobValues } from "@/lib/zod schemas/jobSchema";
 import {
   createJobAction,
@@ -32,7 +29,6 @@ import {
   WORK_ARRANGEMENT_MAP,
 } from "@/constants";
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -53,11 +49,10 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-// Custom Components
 import MultiValueInput from "./MultiValueInput";
 import SelectQuestion from "./SelectQuestion";
-import FormSection from "./FormSection"; // Assuming you placed FormSection in the same directory
-import { AiGenerateButton } from "./AiGenerateButton"; // Assuming you placed AiGenerateButton here
+import FormSection from "./FormSection";
+import { AiGenerateButton } from "./AiGenerateButton";
 
 const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [isSubmitting, startTransition] = useTransition();

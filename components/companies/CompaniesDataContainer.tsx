@@ -1,6 +1,5 @@
 import { prisma } from "@/prisma/prisma";
 import CompaniesList from "./CompaniesList";
-import { Prisma } from "@prisma/client";
 
 const CompaniesDataContainer = async () => {
   const companies = await prisma.company.findMany({

@@ -10,9 +10,6 @@ import {
   CompanyCreationStageTwoValues,
 } from "../zod schemas/auth/authSchemas";
 import bcrypt, { hash } from "bcryptjs";
-import { error } from "console";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth";
 import { CompanySize } from "@prisma/client";
 import { formatToTitleCase } from "../utils";
 
