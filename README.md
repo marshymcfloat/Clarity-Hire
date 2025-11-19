@@ -2,7 +2,7 @@
 
 **No more uncertainties in job seeking and hiring**
 
-ClarityHire is a modern, full-stack job recruitment platform that streamlines the hiring process for companies and simplifies job searching for candidates. Built with cutting-edge technologies, it provides a seamless experience for both recruiters and job seekers.
+ClarityHire is an **AI-powered recruitment and applicant tracking platform** that streamlines the entire hiring process for companies and simplifies job searching for candidates. More than just a job board, it provides comprehensive recruitment management tools including company management, application tracking, custom screening questions, and AI-assisted job description generation. Built with cutting-edge technologies, it delivers a seamless end-to-end experience for both recruiters and job seekers.
 
 ## 🌟 Features
 
