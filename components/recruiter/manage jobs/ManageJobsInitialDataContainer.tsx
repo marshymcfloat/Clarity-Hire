@@ -9,6 +9,7 @@ const ManageJobsInitialDataContainer = async () => {
   const session = await getServerSession(authOptions);
   const jobs = await prisma.job.findMany({
     where: { companyId: session?.user.activeCompanyId },
+    include: { QuestionOnJob: true },
   });
 
   return <JobDataTable columns={jobColumns} data={jobs} />;

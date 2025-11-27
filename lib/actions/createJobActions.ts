@@ -205,17 +205,59 @@ export async function createJobAction(values: createJobActionPayload) {
   }
 }
 
-export async function updateJobAction(payload: {
-  id: string; // The ID of the job to update
-  values: CreateJobValues;
-}) {
-  console.log("Updating job with ID:", payload.id);
-  console.log("With data:", payload.values);
-  // 1. Validate the payload with your schema
-  // 2. Find the job in the database using payload.id
-  // 3. Update the job with payload.values
-  // 4. Return a success or error message
-  // For now, let's simulate success:
-  await new Promise((res) => setTimeout(res, 1000));
-  return { success: true, message: "Job updated successfully!" };
+type UpdateJobActionPayload = CreateJobValues & {
+  companySlug: string;
+  memberId: string;
+  jobId: string;
+};
+
+export async function updateJobAction(values: UpdateJobActionPayload) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return { success: false, error: "Please Login First" };
+    }
+
+    const validationResult = createJobSchema.safeParse(values);
+
+    if (!validationResult.success) {
+      return { success: false, error: "Invalid Input" };
+    }
+
+    const { questions, ...jobData } = validationResult.data;
+
+    await prisma.$transaction(async (tx) => {
+      // Update the job
+      const updatedJob = await tx.job.update({
+        where: { id: values.jobId },
+        data: {
+          ...jobData,
+        },
+      });
+
+      // Delete existing question relations and recreate
+      await tx.questionOnJob.deleteMany({
+        where: { jobId: values.jobId },
+      });
+
+      if (questions && questions.length > 0) {
+        const questionsForJob = questions.map((ques) => ({
+          jobId: updatedJob.id,
+          questionId: ques.questionId,
+          isRequired: ques.required,
+        }));
+
+        await tx.questionOnJob.createMany({ data: questionsForJob });
+      }
+
+      return updatedJob;
+    });
+
+    revalidatePath(`/${values.companySlug}/${values.memberId}/manage-jobs`);
+    return { success: true, message: "Updated Job Successfully" };
+  } catch (err) {
+    console.error("There is an unexpected error occurred", err);
+    return { success: false, error: "There is an unexpected error occurred" };
+  }
 }
