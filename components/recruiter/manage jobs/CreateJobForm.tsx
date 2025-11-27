@@ -19,6 +19,7 @@ import type {
 import { createJobSchema, CreateJobValues } from "@/lib/zod schemas/jobSchema";
 import {
   createJobAction,
+  updateJobAction,
   generateJobDescriptionField,
   generateJobDescriptionList,
   GenerateListPayload,
@@ -59,7 +60,31 @@ import SelectQuestion from "./SelectQuestion";
 import FormSection from "./FormSection"; // Assuming you placed FormSection in the same directory
 import { AiGenerateButton } from "./AiGenerateButton"; // Assuming you placed AiGenerateButton here
 
-const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
+interface CreateJobFormProps {
+  onSuccess: () => void;
+  initialData?: CreateJobValues & { id?: string };
+}
+
+const defaultFormValues: CreateJobValues = {
+  title: "",
+  summary: "",
+  department: "",
+  location: "",
+  jobType: "FULL_TIME",
+  experienceLevel: "ENTRY_LEVEL",
+  workArrangement: "ON_SITE",
+  status: "DRAFT",
+  salaryMin: undefined,
+  salaryMax: undefined,
+  benefits: [],
+  qualifications: [],
+  responsibilities: [],
+  skills: [],
+  workSchedule: "",
+  questions: [],
+};
+
+const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
   const [isSubmitting, startTransition] = useTransition();
   const [isGenerating, setIsGenerating] = useState({
     summary: false,
@@ -67,28 +92,31 @@ const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
     responsibilities: false,
   });
 
+  const isEditMode = !!initialData?.id;
   const { companySlug, memberId } = useParams();
 
   const form = useForm<CreateJobValues>({
     resolver: zodResolver(createJobSchema),
-    defaultValues: {
-      title: "",
-      summary: "",
-      department: "",
-      location: "",
-      jobType: "FULL_TIME",
-      experienceLevel: "ENTRY_LEVEL",
-      workArrangement: "ON_SITE",
-      status: "DRAFT",
-      salaryMin: undefined,
-      salaryMax: undefined,
-      benefits: [],
-      qualifications: [],
-      responsibilities: [],
-      skills: [],
-      workSchedule: "",
-      questions: [],
-    },
+    defaultValues: initialData
+      ? {
+          title: initialData.title ?? "",
+          summary: initialData.summary ?? "",
+          department: initialData.department ?? "",
+          location: initialData.location ?? "",
+          jobType: initialData.jobType ?? "FULL_TIME",
+          experienceLevel: initialData.experienceLevel ?? "ENTRY_LEVEL",
+          workArrangement: initialData.workArrangement ?? "ON_SITE",
+          status: initialData.status ?? "DRAFT",
+          salaryMin: initialData.salaryMin ?? undefined,
+          salaryMax: initialData.salaryMax ?? undefined,
+          benefits: initialData.benefits ?? [],
+          qualifications: initialData.qualifications ?? [],
+          responsibilities: initialData.responsibilities ?? [],
+          skills: initialData.skills ?? [],
+          workSchedule: initialData.workSchedule ?? "",
+          questions: initialData.questions ?? [],
+        }
+      : defaultFormValues,
   });
 
   const handleGenerateSummary = () => {
@@ -151,7 +179,7 @@ const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
     });
   };
 
-  const { mutate, isPending } = useMutation({
+  const { mutate: createMutate, isPending: isCreating } = useMutation({
     mutationFn: createJobAction,
     onSuccess: (data) => {
       if (!data.success) {
@@ -167,6 +195,24 @@ const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
     },
   });
 
+  const { mutate: updateMutate, isPending: isUpdating } = useMutation({
+    mutationFn: updateJobAction,
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.error);
+        return;
+      }
+      toast.success(data.message);
+      onSuccess();
+    },
+    onError: (error) => {
+      toast.error("An unexpected error occurred. Please try again.");
+      console.error(error);
+    },
+  });
+
+  const isPending = isCreating || isUpdating;
+
   const onSubmit = (values: CreateJobValues) => {
     if (
       !companySlug ||
@@ -177,8 +223,14 @@ const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
       toast.error("An error occurred. Missing required URL parameters.");
       return;
     }
-    const payload = { ...values, companySlug, memberId };
-    mutate(payload);
+
+    if (isEditMode && initialData?.id) {
+      const payload = { ...values, companySlug, memberId, jobId: initialData.id };
+      updateMutate(payload);
+    } else {
+      const payload = { ...values, companySlug, memberId };
+      createMutate(payload);
+    }
   };
 
   const disabled = isSubmitting || isPending;
@@ -544,7 +596,7 @@ const CreateJobForm = ({ onSuccess }: { onSuccess: () => void }) => {
             {disabled ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            {disabled ? "Saving..." : "Create Job Posting"}
+            {disabled ? "Saving..." : isEditMode ? "Update Job" : "Create Job Posting"}
           </Button>
         </div>
       </form>

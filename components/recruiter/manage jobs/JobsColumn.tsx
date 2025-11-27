@@ -1,22 +1,24 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Job, JobStatus } from "@prisma/client";
+import { Job, JobStatus, QuestionOnJob } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
-import { Edit, Ellipsis, Trash } from "lucide-react";
+import { Ellipsis, Trash } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditJobDialog from "./EditJobDialog";
 
-export const jobColumns: ColumnDef<Job>[] = [
+export type JobWithQuestions = Job & {
+  QuestionOnJob?: QuestionOnJob[];
+};
+
+export const jobColumns: ColumnDef<JobWithQuestions>[] = [
   { accessorKey: "title", header: "Job Title" },
   { accessorKey: "department", header: "Department" },
   {
