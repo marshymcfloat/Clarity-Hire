@@ -2,6 +2,7 @@ import { prisma } from "@/prisma/prisma";
 import JobForm from "./JobForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Resume } from "@prisma/client";
 
 const JobApplicationDataContainer = async ({ jobId }: { jobId: string }) => {
   const session = await getServerSession(authOptions);
@@ -23,7 +24,11 @@ const JobApplicationDataContainer = async ({ jobId }: { jobId: string }) => {
   });
 
   const userResumes = Array.from(
-    new Map(allResumes.map((resume) => [resume.name, resume])).values(),
+    new Map<string, Resume>(
+      allResumes.map(
+        (resume: Resume) => [resume.name, resume] as [string, Resume],
+      ),
+    ).values(),
   );
 
   return (
