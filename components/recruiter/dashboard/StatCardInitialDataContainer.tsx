@@ -45,15 +45,28 @@ const StatCardInitialDataContainer = async () => {
     }),
   ]);
 
-  const formattedActivities = recentApplications.map((app: any) => ({
-    id: app.id,
-    type: "APPLICATION" as const,
-    candidateName: app.User.name || "Unknown Candidate",
-    active: true,
-    candidateAvatar: app.User.image,
-    jobTitle: app.Job.title,
-    timestamp: app.createdAt,
-  }));
+  interface FormattedActivity {
+    id: string;
+    type: "APPLICATION";
+    candidateName: string;
+    active: boolean; // explicit property is fine, will be ignored if not used by consumer but needed if we want to follow local logic? Actually removing purely unused is better but keeping for now as it was there.
+    candidateAvatar?: string;
+    jobTitle: string;
+    timestamp: Date;
+  }
+
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const formattedActivities: FormattedActivity[] = recentApplications.map(
+    (app: any) => ({
+      id: app.id,
+      type: "APPLICATION" as const,
+      candidateName: app.User.name || "Unknown Candidate",
+      active: true,
+      candidateAvatar: app.User.image || undefined,
+      jobTitle: app.Job.title,
+      timestamp: app.createdAt,
+    }),
+  );
 
   const stats = {
     activeJobs,

@@ -35,7 +35,7 @@ export default function RejectApplicationDialog({
       await updateApplicationStatus(applicationId, ApplicationStatus.REJECTED);
       toast.success("Application rejected");
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to reject application");
     } finally {
       setLoading(false);

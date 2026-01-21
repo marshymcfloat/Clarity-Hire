@@ -9,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ApplicationStatus } from "@prisma/client";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -45,7 +44,6 @@ export default function UpdateStatusDialog({
       await updateApplicationStatus(applicationId, status);
       toast.success("Status updated successfully");
       onOpenChange(false);
-    } catch (error) {
       toast.error("Failed to update status");
     } finally {
       setLoading(false);

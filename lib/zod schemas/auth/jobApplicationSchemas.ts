@@ -91,13 +91,13 @@ export const createApplicationSchema = (
         .refine((files) => {
           if (!files || files.length === 0) return true;
           return Array.from(files).every(
-            (file: any) => file.size <= MAX_FILE_SIZE,
+            (file) => (file as File).size <= MAX_FILE_SIZE,
           );
         }, `Max file size is 5MB per file.`)
         .refine((files) => {
           if (!files || files.length === 0) return true;
-          return Array.from(files).every((file: any) =>
-            ACCEPTED_FILE_TYPES.includes(file.type),
+          return Array.from(files).every((file) =>
+            ACCEPTED_FILE_TYPES.includes((file as File).type),
           );
         }, "Only .pdf, .doc, and .docx formats are supported."),
     })
