@@ -55,9 +55,13 @@ const StatCardInitialDataContainer = async () => {
     timestamp: Date;
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const formattedActivities: FormattedActivity[] = recentApplications.map(
-    (app: any) => ({
+    (app: {
+      id: string;
+      createdAt: Date;
+      User: { name: string | null; image: string | null };
+      Job: { title: string };
+    }) => ({
       id: app.id,
       type: "APPLICATION" as const,
       candidateName: app.User.name || "Unknown Candidate",

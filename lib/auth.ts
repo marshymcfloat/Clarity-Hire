@@ -3,7 +3,7 @@ import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
-import { TeamRole } from "@prisma/client";
+import { TeamRole, CompanyMember } from "@prisma/client";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -137,9 +137,9 @@ export const authOptions: AuthOptions = {
             TeamRole.HIRING_MANAGER,
           ];
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const isRecruiter = dbUserWithMembership.memberships.some(
-            (membership: any) => recruiterRoles.includes(membership.role),
+            (membership: CompanyMember) =>
+              recruiterRoles.includes(membership.role),
           );
 
           token.isRecruiter = isRecruiter;

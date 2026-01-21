@@ -102,7 +102,7 @@ const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
     }
 
     if (values.attachments && values.attachments.length > 0) {
-      Array.from(values.attachments).forEach((file: any) => {
+      Array.from(values.attachments as unknown as FileList).forEach((file) => {
         formData.append("attachments", file);
       });
     }
@@ -280,8 +280,7 @@ const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
           <FormField
             control={form.control}
             name="attachments"
-            render={({ field: { onChange, value, ...rest } }) => {
-              const files = value as FileList | undefined;
+            render={({ field: { onChange, ...rest } }) => {
               return (
                 <FormItem>
                   <FormLabel className="font-semibold">
