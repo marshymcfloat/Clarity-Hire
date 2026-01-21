@@ -49,7 +49,7 @@ const StatCardInitialDataContainer = async () => {
     id: string;
     type: "APPLICATION";
     candidateName: string;
-    active: boolean; // explicit property is fine, will be ignored if not used by consumer but needed if we want to follow local logic? Actually removing purely unused is better but keeping for now as it was there.
+    active: boolean;
     candidateAvatar?: string;
     jobTitle: string;
     timestamp: Date;
@@ -84,7 +84,7 @@ const StatCardInitialDataContainer = async () => {
       <StatsOverview stats={stats} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 h-full">
-        <div className="col-span-4 rounded-xl border bg-card text-card-foreground shadow p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="md:col-span-1 lg:col-span-4 rounded-xl border bg-card text-card-foreground shadow p-6 flex flex-col items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Analytics Chart Coming Soon</p>
         </div>
 

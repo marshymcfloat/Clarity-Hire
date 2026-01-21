@@ -9,7 +9,7 @@ const page = () => {
         <div className=" animate-fade-in">
           <h1
             className="
-            font-extrabold text-6xl tracking-tighter 
+            font-extrabold text-4xl sm:text-6xl tracking-tighter 
             md:text-8xl lg:text-9xl 
             bg-gradient-to-b from-slate-900 to-slate-600 
             bg-clip-text text-transparent

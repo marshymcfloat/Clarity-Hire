@@ -24,7 +24,7 @@ export default function RecentActivityFeed({
   activities,
 }: RecentActivityFeedProps) {
   return (
-    <Card className="col-span-3 h-full">
+    <Card className="md:col-span-1 lg:col-span-3 h-full">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
         <CardDescription>

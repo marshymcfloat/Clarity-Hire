@@ -174,7 +174,7 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmission)}
-        className="space-y-4"
+        className="space-y-5"
       >
         <FormField
           control={form.control}
@@ -183,13 +183,18 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
             <FormItem>
               <FormLabel
                 className={cn(
-                  formState.errors.companyName && "text-destructive"
+                  "font-medium text-foreground/80",
+                  formState.errors.companyName && "text-destructive",
                 )}
               >
                 Company Name
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder="My Awesome Company Inc." />
+                <Input
+                  {...field}
+                  placeholder="My Awesome Company Inc."
+                  className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -203,7 +208,8 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
             <FormItem>
               <FormLabel
                 className={cn(
-                  formState.errors.companySlug && "text-destructive"
+                  "font-medium text-foreground/80",
+                  formState.errors.companySlug && "text-destructive",
                 )}
               >
                 Company Slug
@@ -213,6 +219,7 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
                   <Input
                     {...field}
                     placeholder="my-awesome-company-inc"
+                    className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
                     onChange={(e) => {
                       if (e.target.value.trim() !== "") {
                         setIsSlugManuallyEdited(true);
@@ -222,18 +229,18 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
                     }}
                   />
                   {slugStatus === "checking" && (
-                    <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-slate-400" />
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-slate-400" />
                   )}
                 </div>
               </FormControl>
               {slugStatus === "available" && (
-                <div className="flex items-center text-sm font-medium text-emerald-600">
+                <div className="flex items-center text-sm font-medium text-emerald-600 mt-1">
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   <p>Slug is available!</p>
                 </div>
               )}
               {slugStatus === "taken" && slugSuggestions.length > 0 && (
-                <div className="pt-1">
+                <div className="pt-2">
                   <p className="text-sm text-slate-500 mb-2">
                     Some suggestions:
                   </p>
@@ -244,7 +251,7 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-auto px-2.5 py-1 text-slate-700 bg-slate-50 hover:bg-slate-100"
+                        className="h-auto px-3 py-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100"
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
                         {suggestion}
@@ -265,14 +272,15 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
             <FormItem>
               <FormLabel
                 className={cn(
-                  formState.errors.companySize && "text-destructive"
+                  "font-medium text-foreground/80",
+                  formState.errors.companySize && "text-destructive",
                 )}
               >
                 Company Size
               </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200">
                     <SelectValue placeholder="Select a size" />
                   </SelectTrigger>
                 </FormControl>
@@ -289,12 +297,18 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
           )}
         />
 
-        <div className="flex justify-between items-center pt-4">
-          <Button type="button" variant="ghost" onClick={prevStep}>
+        <div className="flex justify-between items-center pt-6">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={prevStep}
+            className="text-slate-500 hover:text-slate-800"
+          >
             Back
           </Button>
           <Button
             type="submit"
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg min-w-[120px]"
             disabled={
               slugStatus === "taken" || slugStatus === "checking" || isPending
             }

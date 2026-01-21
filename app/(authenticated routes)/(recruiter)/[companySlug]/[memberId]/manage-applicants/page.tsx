@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
-import Loading from "./loading";
+import ManageApplicantsSkeleton from "@/components/recruiter/manage-applicants/ManageApplicantsSkeleton";
 import ApplicantInitialDataContainer from "@/components/recruiter/manage-applicants/ApplicantInitialDataContainer";
 
 const ManageApplicantsPage = () => {
   return (
     <section className="h-full">
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<ManageApplicantsSkeleton />}>
         <ApplicantInitialDataContainer />
       </Suspense>
     </section>

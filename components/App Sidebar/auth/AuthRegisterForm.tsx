@@ -68,45 +68,65 @@ const AuthRegisterForm = () => {
   }
 
   return (
-    <Form {...form}>
-      <form
-        action=""
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-6"
-      >
-        {formInputs.map((input) => (
-          <FormField
-            key={input}
-            control={form.control}
-            name={input}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="capitalize">
-                  {input !== "confirmPassword" ? input : "Confirm Password"}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type={
-                      input === "name"
-                        ? "text"
-                        : input === "email"
-                          ? "email"
-                          : "password"
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ))}
-        <Button className="mt-6" disabled={isPending}>
-          {isPending && <LoaderCircle className="animate-spin" />}
-          Sign up
-        </Button>
-      </form>
-    </Form>
+    <div className="w-full relative">
+      <div className="flex flex-col space-y-2 text-center mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your details below to create your account
+        </p>
+      </div>
+
+      <Form {...form}>
+        <form
+          action=""
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-4"
+        >
+          {formInputs.map((input) => (
+            <FormField
+              key={input}
+              control={form.control}
+              name={input}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="capitalize font-medium text-foreground/80">
+                    {input !== "confirmPassword" ? input : "Confirm Password"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type={
+                        input === "name"
+                          ? "text"
+                          : input === "email"
+                            ? "email"
+                            : "password"
+                      }
+                      className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
+                      placeholder={
+                        input === "email"
+                          ? "name@example.com"
+                          : input === "name"
+                            ? "John Doe"
+                            : "••••••••"
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+          <Button
+            className="w-full h-11 mt-4 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg"
+            disabled={isPending}
+          >
+            {isPending && <LoaderCircle className="animate-spin mr-2" />}
+            Sign up
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 

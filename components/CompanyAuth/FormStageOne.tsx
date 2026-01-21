@@ -52,7 +52,7 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmission)}
-        className="space-y-4"
+        className="space-y-5"
       >
         <FormField
           control={form.control}
@@ -60,12 +60,19 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel
-                className={cn(formState.errors.fullname && "text-destructive")}
+                className={cn(
+                  "font-medium text-foreground/80",
+                  formState.errors.fullname && "text-destructive",
+                )}
               >
                 Full Name
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Juan Dela Cruz" />
+                <Input
+                  {...field}
+                  placeholder="Juan Dela Cruz"
+                  className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,7 +85,10 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel
-                className={cn(formState.errors.workEmail && "text-destructive")}
+                className={cn(
+                  "font-medium text-foreground/80",
+                  formState.errors.workEmail && "text-destructive",
+                )}
               >
                 Work Email
               </FormLabel>
@@ -87,6 +97,7 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
                   {...field}
                   type="email"
                   placeholder="juandelacruz@company.com"
+                  className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
                 />
               </FormControl>
               <FormMessage />
@@ -100,7 +111,10 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel
-                className={cn(formState.errors.password && "text-destructive")}
+                className={cn(
+                  "font-medium text-foreground/80",
+                  formState.errors.password && "text-destructive",
+                )}
               >
                 Password
               </FormLabel>
@@ -110,12 +124,13 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
                     {...field}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200 pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-slate-500 hover:text-slate-800"
+                    className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-slate-500 hover:text-slate-800"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? (
@@ -138,7 +153,8 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
             <FormItem>
               <FormLabel
                 className={cn(
-                  formState.errors.confirmPassword && "text-destructive"
+                  "font-medium text-foreground/80",
+                  formState.errors.confirmPassword && "text-destructive",
                 )}
               >
                 Confirm Password
@@ -149,6 +165,7 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
                     {...field}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all duration-200"
                   />
                 </div>
               </FormControl>
@@ -157,8 +174,12 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className=" h-4 w-4 animate-spin" />}
+        <Button
+          type="submit"
+          className="w-full h-11 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg mt-2"
+          disabled={isSubmitting}
+        >
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Continue
         </Button>
       </form>

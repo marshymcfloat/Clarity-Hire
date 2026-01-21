@@ -4,11 +4,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Resume } from "@prisma/client";
 
+import LoginRequiredState from "./LoginRequiredState";
+
 const JobApplicationDataContainer = async ({ jobId }: { jobId: string }) => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return <p>Please login first</p>;
+    return <LoginRequiredState />;
   }
 
   const questionJobs = await prisma.questionOnJob.findMany({
