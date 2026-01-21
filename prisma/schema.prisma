@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -28,42 +26,43 @@ model Account {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  username      String?   @unique
-  image         String?
-  
-  hashedPassword String?
-  
-  emailVerified DateTime? 
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  username  String?  @unique
+  image     String?
 
-  Account       Account[]
-  Application   Application[]
-  Resume        Resume[]
-  memberships   CompanyMember[]
-  ownedCompany  Company?      @relation("CompanyOwner")
+  hashedPassword String?
+
+  emailVerified DateTime?
+
+  Account      Account[]
+  Application  Application[]
+  Resume       Resume[]
+  memberships  CompanyMember[]
+  ownedCompany Company?        @relation("CompanyOwner")
+  savedJobs    SavedJob[]
 }
 
 model Company {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   coverImage  String?
   description String
   image       String?
   location    String
-  slug        String   @unique
+  slug        String       @unique
   websiteUrl  String?
-  companySize      CompanySize?
+  companySize CompanySize?
 
-  plan        String   @default("free")
-  
-  ownerId     String   @unique
-  owner       User     @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  plan String @default("free")
+
+  ownerId String @unique
+  owner   User   @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   stripeCustomerId String? @unique
 
@@ -110,16 +109,19 @@ model Job {
   Application   Application[]
   Company       Company         @relation(fields: [companyId], references: [id])
   QuestionOnJob QuestionOnJob[]
+  SavedJob      SavedJob[]
 }
 
 model Application {
-  id                String              @id @default(cuid())
-  userId            String
-  jobId             String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  status            ApplicationStatus   @default(SUBMITTED)
-  resumeId          String
+  id        String            @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  status    ApplicationStatus @default(SUBMITTED)
+  resumeId  String
+  coverLetter       String?
+  attachmentUrls    String[]            @default([])
 
   Job               Job                 @relation(fields: [jobId], references: [id])
   Resume            Resume              @relation(fields: [resumeId], references: [id])
@@ -130,12 +132,12 @@ model Application {
 }
 
 model Resume {
-  id          String        @id @default(cuid())
-  name        String
-  userId      String
-  url         String
-  createdAt   DateTime      @default(now())
-  deletedAt   DateTime?
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  url       String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   Application Application[]
   User        User          @relation(fields: [userId], references: [id])
@@ -156,13 +158,13 @@ model Question {
 }
 
 model ApplicationAnswer {
-  id            String      @id @default(cuid())
+  id            String   @id @default(cuid())
   answer        String[]
   applicationId String
   questionId    String
 
-  Application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  Question      Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  Application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([applicationId, questionId])
 }
@@ -170,17 +172,26 @@ model ApplicationAnswer {
 model QuestionOnJob {
   jobId      String
   questionId String
-  order      Int      @default(0)
-  isRequired Boolean  @default(true)
+  order      Int     @default(0)
+  isRequired Boolean @default(true)
 
-  Job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  Job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@id([jobId, questionId])
 }
 
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, jobId])
+}
 
 enum TeamRole {
   ADMIN

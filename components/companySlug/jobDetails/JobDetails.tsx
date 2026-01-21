@@ -67,48 +67,55 @@ const JobDetails = ({
   } = jobDetails;
 
   return (
-    <div className="container mx-auto space-y-8 overflow-y-auto">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
+    <div className="w-full h-full p-8 space-y-8 overflow-y-auto">
+      <Card className="border-none shadow-lg ring-1 ring-black/5 bg-gradient-to-r from-white to-slate-50 dark:from-zinc-900 dark:to-zinc-800/50">
+        <CardContent className="p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-start gap-6">
+              <Avatar className="h-20 w-20 border-4 border-white shadow-sm ring-1 ring-slate-200">
                 <AvatarImage
                   src={Company.image || undefined}
                   alt={`${Company.name} logo`}
+                  className="object-cover"
                 />
-                <AvatarFallback className="text-xl font-bold">
+                <AvatarFallback className="text-2xl font-bold bg-violet-100 text-violet-700">
                   {getInitials(Company.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold">{title}</h1>
-                <p className="text-muted-foreground">
-                  {Company.name} • {location}
-                </p>
-                <div className="pt-2">
-                  <JobMiniDetails
-                    arrangement={workArrangement}
-                    experience={experienceLevel}
-                    type={jobType}
-                  />
+              <div className="space-y-4">
+                <div>
+                  <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+                    {title}
+                  </h1>
+                  <div className="flex items-center gap-2 mt-1 text-slate-500 font-medium">
+                    <Building2 className="h-4 w-4" />
+                    <span>{Company.name}</span>
+                    <span>•</span>
+                    <span className="text-slate-400">{location}</span>
+                  </div>
                 </div>
+                <JobMiniDetails
+                  arrangement={workArrangement}
+                  experience={experienceLevel}
+                  type={jobType}
+                />
               </div>
             </div>
 
-            <div className="flex flex-col items-start gap-3 md:items-end">
+            <div className="flex flex-col items-start gap-4 md:items-end min-w-[200px]">
+              <div className="flex flex-col items-end">
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                  {formatSalary(salaryMin, salaryMax)}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  per month
+                </p>
+              </div>
               <ApplyJobSheet
                 jobTitle={jobDetails.title}
                 jobSummary={jobDetails.summary}
                 jobId={jobId}
               />
-              <p className="font-semibold text-slate-800">
-                {formatSalary(salaryMin, salaryMax)}
-                <span className="font-normal text-muted-foreground">
-                  {" "}
-                  / month
-                </span>
-              </p>
             </div>
           </div>
         </CardContent>

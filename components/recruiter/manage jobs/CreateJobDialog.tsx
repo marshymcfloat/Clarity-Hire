@@ -1,5 +1,3 @@
-// src/components/CreateJobDialog.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -25,7 +23,7 @@ const CreateJobDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="ml-auto">
+        <Button className="ml-auto bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200">
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Job
         </Button>

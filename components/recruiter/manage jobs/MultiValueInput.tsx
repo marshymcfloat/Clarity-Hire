@@ -1,5 +1,3 @@
-// src/components/MultiValueInput.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -8,7 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
-  FormDescription, // ✨ NEW: Import FormDescription
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,7 +21,7 @@ type MultiValueInputProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   as?: "input" | "textarea";
-  description?: string; // ✨ NEW: Add an optional description prop
+  description?: string;
 };
 
 const MultiValueInput = <T extends FieldValues>({
@@ -32,7 +30,7 @@ const MultiValueInput = <T extends FieldValues>({
   label,
   placeholder,
   as = "input",
-  description, // ✨ NEW
+  description,
 }: MultiValueInputProps<T>) => {
   const [inputValue, setInputValue] = useState("");
   const InputComponent = as === "textarea" ? Textarea : Input;
@@ -62,7 +60,7 @@ const MultiValueInput = <T extends FieldValues>({
         };
 
         const handleKeyDown = (
-          e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+          e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
         ) => {
           if (as === "input" && (e.key === "Enter" || e.key === ",")) {
             e.preventDefault();
@@ -74,7 +72,6 @@ const MultiValueInput = <T extends FieldValues>({
           <FormItem>
             {label && <FormLabel>{label}</FormLabel>}
 
-            {/* Render the list of items */}
             <div className="flex flex-wrap gap-2 rounded-md border p-2 min-h-[46px] bg-background">
               {items.length === 0 && (
                 <span className="text-sm text-muted-foreground px-2 py-1">

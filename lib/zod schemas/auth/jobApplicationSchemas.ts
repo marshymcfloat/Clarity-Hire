@@ -6,48 +6,54 @@ type QuestionOnJobWithQuestion = QuestionOnJob & {
 };
 
 const generateAnswersSchema = (questions: QuestionOnJobWithQuestion[]) => {
-  const shape = questions.reduce((acc, q) => {
-    const { Question: question, isRequired } = q;
+  const shape = questions.reduce(
+    (acc, q) => {
+      const { Question: question, isRequired } = q;
 
-    switch (question.type) {
-      case QuestionTypeEnum.TEXT: {
-        let validator = z.string();
-        if (isRequired) validator = validator.min(1, "This field is required.");
-        acc[question.id] = validator;
-        break;
-      }
-      case QuestionTypeEnum.NUMBER: {
-        const numberSchema = z.coerce.number();
-        if (isRequired) {
-          acc[question.id] = numberSchema;
-        } else {
-          acc[question.id] = z.preprocess(
-            (val) => (val === "" ? undefined : val),
-            numberSchema.optional()
-          );
+      switch (question.type) {
+        case QuestionTypeEnum.TEXT: {
+          let validator = z.string();
+          if (isRequired)
+            validator = validator.min(1, "This field is required.");
+          acc[question.id] = validator;
+          break;
         }
-        break;
+        case QuestionTypeEnum.NUMBER: {
+          const numberSchema = z.coerce.number();
+          if (isRequired) {
+            acc[question.id] = numberSchema;
+          } else {
+            acc[question.id] = z.preprocess(
+              (val) => (val === "" ? undefined : val),
+              numberSchema.optional(),
+            );
+          }
+          break;
+        }
+        case QuestionTypeEnum.TRUE_OR_FALSE:
+        case QuestionTypeEnum.MULTIPLE_CHOICE: {
+          let validator = z.string();
+          if (isRequired)
+            validator = validator.min(1, "Please make a selection.");
+          acc[question.id] = validator;
+          break;
+        }
+        case QuestionTypeEnum.CHECKBOX: {
+          let validator = z.array(z.string());
+          if (isRequired)
+            validator = validator.nonempty(
+              "Please select at least one option.",
+            );
+          acc[question.id] = validator;
+          break;
+        }
+        default:
+          acc[question.id] = z.any();
       }
-      case QuestionTypeEnum.TRUE_OR_FALSE:
-      case QuestionTypeEnum.MULTIPLE_CHOICE: {
-        let validator = z.string();
-        if (isRequired)
-          validator = validator.min(1, "Please make a selection.");
-        acc[question.id] = validator;
-        break;
-      }
-      case QuestionTypeEnum.CHECKBOX: {
-        let validator = z.array(z.string());
-        if (isRequired)
-          validator = validator.nonempty("Please select at least one option.");
-        acc[question.id] = validator;
-        break;
-      }
-      default:
-        acc[question.id] = z.any();
-    }
-    return acc;
-  }, {} as Record<string, z.ZodTypeAny>);
+      return acc;
+    },
+    {} as Record<string, z.ZodTypeAny>,
+  );
 
   return z.object(shape);
 };
@@ -60,7 +66,7 @@ const ACCEPTED_FILE_TYPES = [
 ];
 
 export const createApplicationSchema = (
-  questions: QuestionOnJobWithQuestion[]
+  questions: QuestionOnJobWithQuestion[],
 ) => {
   return z
     .object({
@@ -71,13 +77,29 @@ export const createApplicationSchema = (
         .optional()
         .refine(
           (file) => !file || file?.size <= MAX_FILE_SIZE,
-          `Max file size is 5MB.`
+          `Max file size is 5MB.`,
         )
         .refine(
           (file) => !file || ACCEPTED_FILE_TYPES.includes(file?.type),
-          "Only .pdf, .doc, and .docx formats are supported."
+          "Only .pdf, .doc, and .docx formats are supported.",
         ),
       answers: generateAnswersSchema(questions),
+      coverLetter: z.string().optional(),
+      attachments: z
+        .any()
+        .optional()
+        .refine((files) => {
+          if (!files || files.length === 0) return true;
+          return Array.from(files).every(
+            (file: any) => file.size <= MAX_FILE_SIZE,
+          );
+        }, `Max file size is 5MB per file.`)
+        .refine((files) => {
+          if (!files || files.length === 0) return true;
+          return Array.from(files).every((file: any) =>
+            ACCEPTED_FILE_TYPES.includes(file.type),
+          );
+        }, "Only .pdf, .doc, and .docx formats are supported."),
     })
     .superRefine((data, ctx) => {
       if (data.resumeSelection === "select" && !data.resumeId) {
@@ -98,11 +120,13 @@ export const createApplicationSchema = (
 };
 
 export const createBackendApplicationSchema = (
-  questions: QuestionOnJobWithQuestion[]
+  questions: QuestionOnJobWithQuestion[],
 ) => {
   return z.object({
     jobId: z.string().cuid({ message: "Invalid Job ID format." }),
     resumeId: z.string().cuid({ message: "Invalid Resume ID format." }),
     answers: generateAnswersSchema(questions),
+    coverLetter: z.string().optional(),
+    attachmentUrls: z.array(z.string()).optional(),
   });
 };

@@ -1,6 +1,12 @@
 "use client";
 
-import { Briefcase, ClipboardList } from "lucide-react";
+import {
+  Briefcase,
+  ClipboardList,
+  Bookmark,
+  Users,
+  Loader2,
+} from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 
 import {
@@ -22,7 +28,7 @@ import ProgressLink from "../ui/ProgressLink";
 export function AppSidebar() {
   const { companySlug } = useParams();
   const pathname = usePathname();
-  const session = useSession();
+  const { data: session, status } = useSession();
 
   const ApplicantItems = [
     {
@@ -35,20 +41,52 @@ export function AppSidebar() {
       url: `/${companySlug}/job-applications`,
       icon: ClipboardList,
     },
+    {
+      title: "Saved Jobs",
+      url: `/${companySlug}/saved-jobs`,
+      icon: Bookmark,
+    },
   ];
 
   const RecruiterItems = [
     {
       title: "Dashboard",
-      url: `/${companySlug}/${session.data?.user.memberId}/dashboard`,
+      url: `/${companySlug}/${session?.user?.memberId}/dashboard`,
       icon: Briefcase,
     },
     {
       title: "Manage Jobs",
-      url: `/${companySlug}/${session.data?.user.memberId}/manage-jobs`,
+      url: `/${companySlug}/${session?.user?.memberId}/manage-jobs`,
       icon: Briefcase,
     },
+    {
+      title: "Manage Applicants",
+      url: `/${companySlug}/${session?.user?.memberId}/manage-applicants`,
+      icon: Users,
+    },
   ];
+
+  const getSidebarItems = () => {
+    if (
+      status === "loading" ||
+      status === "unauthenticated" ||
+      !session?.user
+    ) {
+      return [];
+    }
+
+    if (session.user.isRecruiter) {
+      return RecruiterItems;
+    }
+
+    if (!session.user.isRecruiter) {
+      return ApplicantItems;
+    }
+
+    return [];
+  };
+
+  const items = getSidebarItems();
 
   return (
     <Sidebar>
@@ -57,39 +95,28 @@ export function AppSidebar() {
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {!session.data?.user.isRecruiter
-                ? ApplicantItems.map((item) => {
-                    const isActive = pathname === item.url;
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          className={cn(isActive && "font-semibold")}
-                        >
-                          <ProgressLink href={item.url}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </ProgressLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })
-                : RecruiterItems.map((item) => {
-                    const isActive = pathname === item.url;
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          className={cn(isActive && "font-semibold")}
-                        >
-                          <ProgressLink href={item.url}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </ProgressLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
+              {status === "loading" ? (
+                <div className="flex w-full justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                items.map((item) => {
+                  const isActive = pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        className={cn(isActive && "font-semibold")}
+                      >
+                        <ProgressLink href={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </ProgressLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

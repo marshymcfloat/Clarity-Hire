@@ -3,7 +3,7 @@ import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
-import { TeamRole } from "@prisma/client";
+import { TeamRole, CompanyMember } from "@prisma/client";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -27,20 +27,21 @@ export const authOptions: AuthOptions = {
 
         if (!userExists || !userExists.hashedPassword) {
           throw new Error(
-            "No user found with this email and password combination."
+            "No user found with this email and password combination.",
           );
         }
 
         const isCorrect = await compare(
           credentials.password,
-          userExists.hashedPassword
+          userExists.hashedPassword,
         );
 
         if (!isCorrect) {
           throw new Error("Incorrect password. Please try again.");
         }
 
-        return userExists;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return userExists as any;
       },
     }),
     GoogleProvider({
@@ -117,7 +118,13 @@ export const authOptions: AuthOptions = {
         const dbUserWithMembership = await prisma.user.findUnique({
           where: { email: user.email! },
           include: {
-            memberships: true,
+            memberships: {
+              include: {
+                company: {
+                  select: { slug: true },
+                },
+              },
+            },
           },
         });
 
@@ -130,8 +137,9 @@ export const authOptions: AuthOptions = {
             TeamRole.HIRING_MANAGER,
           ];
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const isRecruiter = dbUserWithMembership.memberships.some(
-            (membership) => recruiterRoles.includes(membership.role)
+            (membership: any) => recruiterRoles.includes(membership.role),
           );
 
           token.isRecruiter = isRecruiter;
@@ -139,6 +147,7 @@ export const authOptions: AuthOptions = {
             const membership = dbUserWithMembership.memberships[0];
             token.activeCompanyId = membership.companyId;
             token.activeCompanyRole = membership.role;
+            token.activeCompanySlug = membership.company.slug;
             token.memberId = membership.id;
           }
         }
@@ -153,6 +162,7 @@ export const authOptions: AuthOptions = {
         session.user.activeCompanyRole = token.activeCompanyRole;
         session.user.isRecruiter = token.isRecruiter;
         session.user.memberId = token.memberId;
+        session.user.activeCompanySlug = token.activeCompanySlug;
       }
       return session;
     },

@@ -10,10 +10,7 @@ import {
   CompanyCreationStageTwoValues,
 } from "../zod schemas/auth/authSchemas";
 import bcrypt, { hash } from "bcryptjs";
-import { error } from "console";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth";
-import { CompanySize } from "@prisma/client";
+import { CompanySize, Prisma } from "@prisma/client";
 import { formatToTitleCase } from "../utils";
 
 export async function authRegisterAction(values: AuthRegisterValues) {
@@ -45,7 +42,8 @@ export async function authRegisterAction(values: AuthRegisterValues) {
       },
     });
 
-    const { hashedPassword: _, ...user } = newUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { hashedPassword: _hashedPassword, ...user } = newUser;
 
     return {
       success: true,
@@ -65,7 +63,7 @@ type SlugCheckResponse = {
 };
 
 export async function checkCompanySlug(
-  slug: string
+  slug: string,
 ): Promise<SlugCheckResponse> {
   if (!slug || slug.trim().length === 0) {
     return { success: false, error: "Slug cannot be empty." };
@@ -80,7 +78,7 @@ export async function checkCompanySlug(
 
     const potentialSlugs = Array.from(
       { length: 3 },
-      (_, i) => `${slug}-${i + 1}`
+      (_, i) => `${slug}-${i + 1}`,
     );
 
     const existingSuggestions = await prisma.company.findMany({
@@ -94,10 +92,12 @@ export async function checkCompanySlug(
       },
     });
 
-    const takenSlugs = new Set(existingSuggestions.map((s) => s.slug));
+    const takenSlugs = new Set(
+      existingSuggestions.map((s: { slug: string }) => s.slug),
+    );
 
     const availableSuggestions = potentialSlugs.filter(
-      (s) => !takenSlugs.has(s)
+      (s) => !takenSlugs.has(s),
     );
 
     return {
@@ -119,10 +119,10 @@ type CreateCompanyResponse = {
 
 export async function createCompanyAndUserAction(
   form1Values: CompanyCreationStageOneValues,
-  form2Values: CompanyCreationStageTwoValues
+  form2Values: CompanyCreationStageTwoValues,
 ): Promise<CreateCompanyResponse> {
   const fullSchema = companyCreationStageOneSchema.merge(
-    companyCreationStageTwoSchema
+    companyCreationStageTwoSchema,
   );
   const validationResult = fullSchema.safeParse({
     ...form1Values,
@@ -159,36 +159,38 @@ export async function createCompanyAndUserAction(
     const formattedFullName = formatToTitleCase(data.fullname);
     const formattedCompanyName = formatToTitleCase(data.companyName);
 
-    const newCompany = await prisma.$transaction(async (tx) => {
-      const newUser = await tx.user.create({
-        data: {
-          name: formattedFullName,
-          email: data.workEmail,
-          hashedPassword: hashedPassword,
-        },
-      });
+    const newCompany = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const newUser = await tx.user.create({
+          data: {
+            name: formattedFullName,
+            email: data.workEmail,
+            hashedPassword: hashedPassword,
+          },
+        });
 
-      const company = await tx.company.create({
-        data: {
-          name: formattedCompanyName,
-          slug: data.companySlug,
-          ownerId: newUser.id,
-          companySize: data.companySize as CompanySize,
-          description: "",
-          location: "",
-        },
-      });
+        const company = await tx.company.create({
+          data: {
+            name: formattedCompanyName,
+            slug: data.companySlug,
+            ownerId: newUser.id,
+            companySize: data.companySize as CompanySize,
+            description: "",
+            location: "",
+          },
+        });
 
-      await tx.companyMember.create({
-        data: {
-          userId: newUser.id,
-          companyId: company.id,
-          role: "ADMIN",
-        },
-      });
+        await tx.companyMember.create({
+          data: {
+            userId: newUser.id,
+            companyId: company.id,
+            role: "ADMIN",
+          },
+        });
 
-      return company;
-    });
+        return company;
+      },
+    );
 
     return { success: true, company: { slug: newCompany.slug } };
   } catch (err) {

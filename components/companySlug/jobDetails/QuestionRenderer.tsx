@@ -1,5 +1,3 @@
-// File: components/your-path/QuestionRenderer.tsx
-
 "use client";
 
 import { Control, FieldValues, Path } from "react-hook-form";
@@ -175,8 +173,8 @@ const QuestionRenderer = <TFieldValues extends FieldValues>({
                                   ? field.onChange([...fieldValue, option])
                                   : field.onChange(
                                       fieldValue.filter(
-                                        (value) => value !== option
-                                      )
+                                        (value) => value !== option,
+                                      ),
                                     );
                               }}
                             />

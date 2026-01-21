@@ -1,9 +1,13 @@
-const page = () => {
+import JobApplicationsInitialDataContainer from "@/components/applicant/job-applications/JobApplicationsInitialDataContainer";
+import JobApplicationsSkeleton from "@/components/applicant/job-applications/JobApplicationsSkeleton";
+import { Suspense } from "react";
+
+const JobApplicationsPage = () => {
   return (
-    <div>
-      <h1>meow</h1>
-    </div>
+    <Suspense fallback={<JobApplicationsSkeleton />}>
+      <JobApplicationsInitialDataContainer />
+    </Suspense>
   );
 };
 
-export default page;
+export default JobApplicationsPage;

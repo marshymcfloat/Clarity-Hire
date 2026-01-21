@@ -17,9 +17,14 @@ const JobApplicationDataContainer = async ({ jobId }: { jobId: string }) => {
     },
   });
 
-  const userResumes = await prisma.resume.findMany({
+  const allResumes = await prisma.resume.findMany({
     where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
   });
+
+  const userResumes = Array.from(
+    new Map(allResumes.map((resume) => [resume.name, resume])).values(),
+  );
 
   return (
     <JobForm questions={questionJobs} resumes={userResumes} jobId={jobId} />

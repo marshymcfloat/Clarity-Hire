@@ -1,5 +1,5 @@
 import { Job } from "@prisma/client";
-import Link from "next/link";
+
 import { MapPin, TrendingUp, Clock } from "lucide-react";
 
 import { EXPERIENCE_LEVEL_MAP, JOB_TYPE_MAP } from "@/constants";
@@ -15,12 +15,15 @@ import { Badge } from "../ui/badge";
 import { formatPostedDate } from "@/lib/utils";
 import ProgressLink from "../ui/ProgressLink";
 
+import SaveJobButton from "./SaveJobButton";
+
 interface JobCardProps {
   job: Job;
   companySlug: string;
+  isSaved?: boolean;
 }
 
-const JobCard = ({ job, companySlug }: JobCardProps) => {
+const JobCard = ({ job, companySlug, isSaved = false }: JobCardProps) => {
   return (
     <ProgressLink
       href={`/${companySlug}/available-jobs/${job.id}`}
@@ -31,6 +34,7 @@ const JobCard = ({ job, companySlug }: JobCardProps) => {
           <CardTitle className="text-xl font-semibold leading-tight">
             {job.title}
           </CardTitle>
+          <SaveJobButton jobId={job.id} initialIsSaved={isSaved} />
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <Badge variant="secondary" className="flex i  tems-center gap-1.5">
               <MapPin size={14} />

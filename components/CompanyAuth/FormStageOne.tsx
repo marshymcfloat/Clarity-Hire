@@ -35,7 +35,6 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
       password: "",
       confirmPassword: "",
     },
-    mode: "onBlur",
   });
 
   const { formState } = form;
@@ -158,12 +157,10 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
           )}
         />
 
-        <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Continue
-          </Button>
-        </div>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className=" h-4 w-4 animate-spin" />}
+          Continue
+        </Button>
       </form>
     </Form>
   );

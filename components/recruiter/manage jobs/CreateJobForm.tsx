@@ -1,5 +1,3 @@
-// src/components/CreateJobForm.tsx
-
 "use client";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -13,9 +11,10 @@ import type {
   JobType,
   ExperienceLevel,
   WorkArrangement,
+  Job,
+  QuestionOnJob,
 } from "@prisma/client";
 
-// Libs, Schemas & Constants
 import { createJobSchema, CreateJobValues } from "@/lib/zod schemas/jobSchema";
 import {
   createJobAction,
@@ -33,7 +32,6 @@ import {
   WORK_ARRANGEMENT_MAP,
 } from "@/constants";
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -54,37 +52,18 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-// Custom Components
 import MultiValueInput from "./MultiValueInput";
 import SelectQuestion from "./SelectQuestion";
-import FormSection from "./FormSection"; // Assuming you placed FormSection in the same directory
-import { AiGenerateButton } from "./AiGenerateButton"; // Assuming you placed AiGenerateButton here
+import FormSection from "./FormSection";
+import { AiGenerateButton } from "./AiGenerateButton";
 
-interface CreateJobFormProps {
+const CreateJobForm = ({
+  onSuccess,
+  initialData,
+}: {
   onSuccess: () => void;
-  initialData?: CreateJobValues & { id?: string };
-}
-
-const defaultFormValues: CreateJobValues = {
-  title: "",
-  summary: "",
-  department: "",
-  location: "",
-  jobType: "FULL_TIME",
-  experienceLevel: "ENTRY_LEVEL",
-  workArrangement: "ON_SITE",
-  status: "DRAFT",
-  salaryMin: undefined,
-  salaryMax: undefined,
-  benefits: [],
-  qualifications: [],
-  responsibilities: [],
-  skills: [],
-  workSchedule: "",
-  questions: [],
-};
-
-const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
+  initialData?: Job & { QuestionOnJob: QuestionOnJob[] };
+}) => {
   const [isSubmitting, startTransition] = useTransition();
   const [isGenerating, setIsGenerating] = useState({
     summary: false,
@@ -97,26 +76,24 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
 
   const form = useForm<CreateJobValues>({
     resolver: zodResolver(createJobSchema),
-    defaultValues: initialData
-      ? {
-          title: initialData.title ?? "",
-          summary: initialData.summary ?? "",
-          department: initialData.department ?? "",
-          location: initialData.location ?? "",
-          jobType: initialData.jobType ?? "FULL_TIME",
-          experienceLevel: initialData.experienceLevel ?? "ENTRY_LEVEL",
-          workArrangement: initialData.workArrangement ?? "ON_SITE",
-          status: initialData.status ?? "DRAFT",
-          salaryMin: initialData.salaryMin ?? undefined,
-          salaryMax: initialData.salaryMax ?? undefined,
-          benefits: initialData.benefits ?? [],
-          qualifications: initialData.qualifications ?? [],
-          responsibilities: initialData.responsibilities ?? [],
-          skills: initialData.skills ?? [],
-          workSchedule: initialData.workSchedule ?? "",
-          questions: initialData.questions ?? [],
-        }
-      : defaultFormValues,
+    defaultValues: {
+      title: initialData?.title || "",
+      summary: initialData?.summary || "",
+      department: initialData?.department || "",
+      location: initialData?.location || "",
+      jobType: initialData?.jobType || "FULL_TIME",
+      experienceLevel: initialData?.experienceLevel || "ENTRY_LEVEL",
+      workArrangement: initialData?.workArrangement || "ON_SITE",
+      status: initialData?.status || "DRAFT",
+      salaryMin: initialData?.salaryMin ?? undefined,
+      salaryMax: initialData?.salaryMax ?? undefined,
+      benefits: initialData?.benefits || [],
+      qualifications: initialData?.qualifications || [],
+      responsibilities: initialData?.responsibilities || [],
+      skills: initialData?.skills || [],
+      workSchedule: initialData?.workSchedule || "",
+      questions: initialData?.QuestionOnJob || [],
+    },
   });
 
   const handleGenerateSummary = () => {
@@ -149,7 +126,7 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
   };
 
   const handleGenerateList = (
-    fieldName: "qualifications" | "responsibilities"
+    fieldName: "qualifications" | "responsibilities",
   ) => {
     const { title, summary, department, experienceLevel, jobType } =
       form.getValues();
@@ -179,7 +156,7 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
     });
   };
 
-  const { mutate: createMutate, isPending: isCreating } = useMutation({
+  const { mutate: createMutate, isPending: createPending } = useMutation({
     mutationFn: createJobAction,
     onSuccess: (data) => {
       if (!data.success) {
@@ -195,7 +172,7 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
     },
   });
 
-  const { mutate: updateMutate, isPending: isUpdating } = useMutation({
+  const { mutate: updateMutate, isPending: updatePending } = useMutation({
     mutationFn: updateJobAction,
     onSuccess: (data) => {
       if (!data.success) {
@@ -205,14 +182,7 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
       toast.success(data.message);
       onSuccess();
     },
-    onError: (error) => {
-      toast.error("An unexpected error occurred. Please try again.");
-      console.error(error);
-    },
   });
-
-  const isPending = isCreating || isUpdating;
-
   const onSubmit = (values: CreateJobValues) => {
     if (
       !companySlug ||
@@ -223,17 +193,16 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
       toast.error("An error occurred. Missing required URL parameters.");
       return;
     }
+    const payload = { ...values, companySlug, memberId };
 
-    if (isEditMode && initialData?.id) {
-      const payload = { ...values, companySlug, memberId, jobId: initialData.id };
-      updateMutate(payload);
+    if (initialData) {
+      updateMutate({ values: payload, id: initialData.id });
     } else {
-      const payload = { ...values, companySlug, memberId };
       createMutate(payload);
     }
   };
 
-  const disabled = isSubmitting || isPending;
+  const disabled = isSubmitting || createPending || updatePending;
 
   return (
     <Form {...form}>
@@ -389,11 +358,12 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
                     <Input
                       type="number"
                       placeholder="e.g., 50000"
+                      {...field}
                       value={field.value ?? ""}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const value = e.target.value;
                         field.onChange(
-                          val === "" ? undefined : parseInt(val, 10)
+                          value === "" ? undefined : Number(value),
                         );
                       }}
                     />
@@ -412,11 +382,12 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
                     <Input
                       type="number"
                       placeholder="e.g., 80000"
+                      {...field}
                       value={field.value ?? ""}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const value = e.target.value;
                         field.onChange(
-                          val === "" ? undefined : parseInt(val, 10)
+                          value === "" ? undefined : Number(value),
                         );
                       }}
                     />
@@ -596,7 +567,11 @@ const CreateJobForm = ({ onSuccess, initialData }: CreateJobFormProps) => {
             {disabled ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            {disabled ? "Saving..." : isEditMode ? "Update Job" : "Create Job Posting"}
+            {disabled
+              ? "Saving..."
+              : isEditMode
+                ? "Update Job"
+                : "Create Job Posting"}
           </Button>
         </div>
       </form>

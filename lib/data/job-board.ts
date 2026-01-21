@@ -1,0 +1,31 @@
+import { prisma } from "@/prisma/prisma";
+import { unstable_cache } from "next/cache";
+
+export const getAvailableJobs = unstable_cache(
+  async (companySlug: string, userId?: string) => {
+    const company = await prisma.company.findFirst({
+      where: { slug: companySlug },
+      select: { id: true },
+    });
+
+    const availableJobs = await prisma.job.findMany({
+      where: { companyId: company?.id },
+      include: {
+        SavedJob: {
+          where: { userId: userId ?? "NO_USER" },
+          select: { id: true },
+        },
+      },
+    });
+
+    return availableJobs.map((job) => ({
+      ...job,
+      isSaved: job.SavedJob.length > 0,
+    }));
+  },
+  ["available-jobs"],
+  {
+    revalidate: 600,
+    tags: ["available-jobs"],
+  },
+);

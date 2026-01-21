@@ -75,7 +75,6 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
       companySlug: "",
       companySize: "",
     },
-    mode: "onBlur",
   });
 
   const { formState } = form;

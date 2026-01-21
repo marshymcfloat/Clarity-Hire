@@ -33,7 +33,7 @@ const AuthRegisterForm = () => {
   });
 
   const formInputs = Object.keys(
-    form.getValues()
+    form.getValues(),
   ) as (keyof AuthRegisterValues)[];
 
   const { mutate, isPending } = useMutation({
@@ -58,7 +58,7 @@ const AuthRegisterForm = () => {
         }
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("An unexpected error occurred. Please try again.");
     },
   });
@@ -91,8 +91,8 @@ const AuthRegisterForm = () => {
                       input === "name"
                         ? "text"
                         : input === "email"
-                        ? "email"
-                        : "password"
+                          ? "email"
+                          : "password"
                     }
                   />
                 </FormControl>

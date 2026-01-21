@@ -14,12 +14,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditJobDialog from "./EditJobDialog";
 
-export type JobWithQuestions = Job & {
-  QuestionOnJob?: QuestionOnJob[];
-};
-
-export const jobColumns: ColumnDef<JobWithQuestions>[] = [
+export const jobColumns: ColumnDef<
+  Job & { QuestionOnJob: QuestionOnJob[] } & {
+    _count?: { Application: number };
+  }
+>[] = [
   { accessorKey: "title", header: "Job Title" },
+  {
+    id: "applicants",
+    header: "Applicants",
+    cell: ({ row }) => {
+      const count = row.original._count?.Application || 0;
+      return (
+        <div className="flex items-center gap-1">
+          <span className="font-medium">{count}</span>
+        </div>
+      );
+    },
+  },
   { accessorKey: "department", header: "Department" },
   {
     accessorKey: "createdAt",
@@ -58,16 +70,16 @@ export const jobColumns: ColumnDef<JobWithQuestions>[] = [
     header: "",
     cell: ({ row }) => {
       const job = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Ellipsis />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <EditJobDialog job={job} />
             </DropdownMenuItem>
+
             <DropdownMenuItem className="">
               <Trash color="red" /> <p className="text-red-600">Delete</p>
             </DropdownMenuItem>

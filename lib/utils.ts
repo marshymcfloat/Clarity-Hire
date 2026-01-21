@@ -1,14 +1,16 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { GoogleGenAI } from "@google/genai";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const formatPostedDate = (date: Date): string => {
+export const formatPostedDate = (date: Date | string): string => {
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const postedDate = new Date(date);
+  const diffInSeconds = Math.floor(
+    (now.getTime() - postedDate.getTime()) / 1000,
+  );
 
   const days = Math.floor(diffInSeconds / 86400);
   if (days > 1) return `${days} days ago`;
@@ -55,20 +57,9 @@ export const formatToTitleCase = (str: string | null | undefined): string => {
     .toLowerCase()
     .split(" ")
     .map((word) =>
-      word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : ""
+      word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : "",
     )
     .join(" ");
 };
 
-export const geminiGenerate = async (inputField: string, job: string) => {
-  const ai = new GoogleGenAI({
-    apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-  });
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `generate a ${inputField} for ${job}, make it comprehensive`,
-  });
-
-  console.log(response.text);
-};
+// geminiGenerate has been moved to app/actions/gemini.ts to secure the API key.

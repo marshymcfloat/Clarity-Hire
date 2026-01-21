@@ -3,7 +3,7 @@ import JobCard from "./JobCard";
 import { Briefcase } from "lucide-react";
 
 interface AvailableJobsListProps {
-  jobs: Job[];
+  jobs: (Job & { isSaved: boolean })[];
   companySlug: string;
 }
 

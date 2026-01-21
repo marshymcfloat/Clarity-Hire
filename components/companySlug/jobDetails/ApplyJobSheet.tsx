@@ -7,7 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Send } from "lucide-react";
+
 import React from "react";
 import JobApplicationDataContainer from "./JobApplicationDataContainer";
 

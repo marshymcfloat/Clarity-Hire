@@ -39,8 +39,10 @@ export const createJobSchema = z
     jobType: JobTypeEnum,
     workArrangement: WorkArrangementEnum,
     location: z.string().min(2, { message: "Location is required" }),
-    salaryMin: z.number().int().nonnegative().optional(),
-    salaryMax: z.number().int().nonnegative().optional(),
+
+    salaryMin: z.coerce.number<number>().int().nonnegative().optional(),
+    salaryMax: z.coerce.number<number>().int().nonnegative().optional(),
+
     benefits: z.array(z.string()).optional(),
     qualifications: z.array(z.string()).optional(),
     responsibilities: z.array(z.string()).optional(),
@@ -69,4 +71,7 @@ export const createJobSchema = z
     }
   );
 
+export const updateJobSchema = createJobSchema.partial();
+
 export type CreateJobValues = z.infer<typeof createJobSchema>;
+export type UpdateJobValues = z.infer<typeof updateJobSchema>;

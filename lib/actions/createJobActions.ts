@@ -1,10 +1,15 @@
 "use server";
 import { z } from "zod";
 import { GoogleGenAI } from "@google/genai";
-import { createJobSchema, CreateJobValues } from "../zod schemas/jobSchema";
+import {
+  createJobSchema,
+  CreateJobValues,
+  updateJobSchema,
+} from "../zod schemas/jobSchema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export type GenerateSummaryPayload = {
@@ -16,7 +21,6 @@ export type GenerateSummaryPayload = {
   skills?: string[];
 };
 
-// --- UPDATED: Type for the list generation payload now includes summary ---
 export type GenerateListPayload = {
   fieldName: "qualifications" | "responsibilities";
   jobTitle: string;
@@ -29,7 +33,7 @@ export type GenerateListPayload = {
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function generateJobDescriptionField(
-  payload: GenerateSummaryPayload
+  payload: GenerateSummaryPayload,
 ) {
   const { jobTitle, department, experienceLevel, jobType, location, skills } =
     payload;
@@ -157,8 +161,6 @@ export async function createJobAction(values: createJobActionPayload) {
   try {
     const session = await getServerSession(authOptions);
 
-    console.log(values);
-
     if (!session?.user) {
       return { success: false, error: "Please Login First" };
     }
@@ -171,7 +173,7 @@ export async function createJobAction(values: createJobActionPayload) {
 
     const { questions, ...jobData } = validationResult.data;
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const createdJob = await tx.job.create({
         data: {
           ...jobData,
@@ -199,19 +201,21 @@ export async function createJobAction(values: createJobActionPayload) {
 
     revalidatePath(`/${values.companySlug}/${values.memberId}/manage-jobs`);
     return { success: true, message: "Created Job Successfully" };
-  } catch (err) {
+  } catch {
     console.error("There is an unexpected error occured");
     return { success: false, error: "There is an unexpected error occured" };
   }
 }
 
-type UpdateJobActionPayload = CreateJobValues & {
-  companySlug: string;
-  memberId: string;
-  jobId: string;
+type UpdateJobActionPayload = {
+  id: string;
+  values: CreateJobValues & {
+    companySlug: string;
+    memberId: string;
+  };
 };
 
-export async function updateJobAction(values: UpdateJobActionPayload) {
+export async function updateJobAction(payload: UpdateJobActionPayload) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -219,45 +223,47 @@ export async function updateJobAction(values: UpdateJobActionPayload) {
       return { success: false, error: "Please Login First" };
     }
 
-    const validationResult = createJobSchema.safeParse(values);
+    const validationResult = updateJobSchema.safeParse(payload.values);
 
     if (!validationResult.success) {
-      return { success: false, error: "Invalid Input" };
+      return {
+        success: false,
+        error: validationResult.error.message || "Validation error",
+      };
     }
 
     const { questions, ...jobData } = validationResult.data;
 
-    await prisma.$transaction(async (tx) => {
-      // Update the job
-      const updatedJob = await tx.job.update({
-        where: { id: values.jobId },
-        data: {
-          ...jobData,
-        },
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.job.update({
+        data: { ...jobData },
+        where: { id: payload.id },
       });
 
-      // Delete existing question relations and recreate
-      await tx.questionOnJob.deleteMany({
-        where: { jobId: values.jobId },
-      });
+      if (questions) {
+        await tx.questionOnJob.deleteMany({
+          where: { jobId: payload.id },
+        });
 
-      if (questions && questions.length > 0) {
-        const questionsForJob = questions.map((ques) => ({
-          jobId: updatedJob.id,
-          questionId: ques.questionId,
-          isRequired: ques.required,
-        }));
-
-        await tx.questionOnJob.createMany({ data: questionsForJob });
+        if (questions.length > 0) {
+          await tx.questionOnJob.createMany({
+            data: questions.map((quest, index) => ({
+              jobId: payload.id,
+              questionId: quest.questionId,
+              isRequired: quest.required,
+              order: index,
+            })),
+          });
+        }
       }
-
-      return updatedJob;
     });
 
-    revalidatePath(`/${values.companySlug}/${values.memberId}/manage-jobs`);
-    return { success: true, message: "Updated Job Successfully" };
-  } catch (err) {
-    console.error("There is an unexpected error occurred", err);
-    return { success: false, error: "There is an unexpected error occurred" };
+    revalidatePath(
+      `/${payload.values.companySlug}/${payload.values.memberId}/manage-jobs`,
+    );
+    return { success: true, message: "Job updated successfully!" };
+  } catch {
+    console.error("There is an unexpected error occured");
+    return { success: false, error: "There in unexpected error occured" };
   }
 }

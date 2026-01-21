@@ -1,5 +1,3 @@
-// src/components/SelectQuestion.tsx
-
 "use client";
 
 import { Question } from "@prisma/client";
@@ -10,7 +8,7 @@ import {
   ItemDescription,
   ItemHeader,
 } from "@/components/ui/item";
-import { Button } from "@/components/ui/button"; // Import Button for remove action
+import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Separator } from "@/components/ui/separator";
@@ -18,17 +16,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// --- NEW TYPE DEFINITION ---
-// We need to store both the ID and the 'required' state.
 export interface SelectedQuestion {
   questionId: string;
   required: boolean;
 }
 
-// --- PROPS DEFINITION (UPDATED) ---
 interface SelectQuestionProps {
-  value: SelectedQuestion[]; // value is now an array of our new type
-  onChange: (value: SelectedQuestion[]) => void; // onChange now passes the full object array
+  value: SelectedQuestion[];
+  onChange: (value: SelectedQuestion[]) => void;
 }
 
 const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
@@ -42,7 +37,7 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
         setIsLoading(true);
         try {
           const response = await fetch(
-            `/api/company/${session.user.activeCompanyId}/questions`
+            `/api/company/${session.user.activeCompanyId}/questions`,
           );
           if (!response.ok) {
             throw new Error("Failed to fetch questions.");
@@ -63,27 +58,22 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
     }
   }, [session, status]);
 
-  // --- MEMOIZED VALUE (UPDATED) ---
-  // This now finds the full question details for each selected question ID.
   const selectedQuestionDetails = useMemo(() => {
     if (!questions) return [];
     return value
       .map((selectedValue) => {
         const question = questions.find(
-          (q) => q.id === selectedValue.questionId
+          (q) => q.id === selectedValue.questionId,
         );
-        if (!question) return null; // In case a question was deleted
+        if (!question) return null;
         return {
-          ...question, // full question data (id, question text)
-          required: selectedValue.required, // a 'required' status from our value prop
+          ...question,
+          required: selectedValue.required,
         };
       })
-      .filter((q): q is Question & { required: boolean } => q !== null); // Type guard to filter out nulls
+      .filter((q): q is Question & { required: boolean } => q !== null);
   }, [questions, value]);
 
-  // --- HANDLER LOGIC (UPDATED) ---
-
-  // Toggles whether a question is in the selected list
   function handleToggleQuestion(questionId: string) {
     const isSelected = value.some((sq) => sq.questionId === questionId);
     let newValue: SelectedQuestion[];
@@ -91,16 +81,14 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
     if (isSelected) {
       newValue = value.filter((sq) => sq.questionId !== questionId);
     } else {
-      // When adding, default 'required' to false
       newValue = [...value, { questionId, required: false }];
     }
     onChange(newValue);
   }
 
-  // Toggles the 'required' status for an already selected question
   function handleToggleRequired(questionId: string) {
     const newValue = value.map((sq) =>
-      sq.questionId === questionId ? { ...sq, required: !sq.required } : sq
+      sq.questionId === questionId ? { ...sq, required: !sq.required } : sq,
     );
     onChange(newValue);
   }
@@ -123,8 +111,6 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
 
   return (
     <div>
-      {/* --- SECTION 1: SELECTED QUESTIONS (REFACTORED) --- */}
-      {/* This is where the Switch now lives */}
       <div className="flex flex-col gap-2 mb-4">
         <h3 className="text-sm font-medium text-muted-foreground">
           Selected Questions
@@ -136,7 +122,6 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
                 <ItemDescription>{selected.question}</ItemDescription>
               </ItemContent>
               <ItemActions className="flex items-center gap-4">
-                {/* The Switch is now here! */}
                 <div className="flex items-center gap-2">
                   <Switch
                     id={`required-${selected.id}`}
@@ -145,9 +130,8 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
                   />
                   <Label htmlFor={`required-${selected.id}`}>Required</Label>
                 </div>
-                {/* A button to remove the question from the list */}
                 <Button
-                  type="button" // Important for forms
+                  type="button"
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
@@ -174,7 +158,7 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
         {questions && questions.length > 0 ? (
           questions.map((question, index) => {
             const isSelected = value.some(
-              (sq) => sq.questionId === question.id
+              (sq) => sq.questionId === question.id,
             );
             return (
               <Item
@@ -195,7 +179,6 @@ const SelectQuestion = ({ value, onChange }: SelectQuestionProps) => {
                     {question.question}
                   </ItemDescription>
                 </ItemContent>
-                {/* The Switch has been removed from here */}
               </Item>
             );
           })

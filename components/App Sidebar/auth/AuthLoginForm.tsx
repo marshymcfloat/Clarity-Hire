@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   authLoginSchema,
   AuthLoginValues,
@@ -53,7 +52,7 @@ const AuthLoginForm = ({ onClose }: { onClose: () => void }) => {
         router.refresh();
         return;
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
     }

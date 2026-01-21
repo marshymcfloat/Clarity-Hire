@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -43,12 +44,12 @@ type JobFormProps = {
 
 const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
   const [resumeOption, setResumeOption] = useState<"select" | "upload">(
-    resumes.length > 0 ? "select" : "upload"
+    resumes.length > 0 ? "select" : "upload",
   );
 
   const formSchema = useMemo(
     () => createApplicationSchema(questions),
-    [questions]
+    [questions],
   );
   type ApplicationFormValues = z.infer<typeof formSchema>;
 
@@ -58,10 +59,15 @@ const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
       resumeSelection: resumes.length > 0 ? "select" : "upload",
       resumeId: resumes.length > 0 ? resumes[0].id : undefined,
       newResumeFile: undefined,
-      answers: questions.reduce((acc, q) => {
-        acc[q.Question.id] = q.Question.type === "CHECKBOX" ? [] : "";
-        return acc;
-      }, {} as Record<string, string | string[]>),
+      coverLetter: "",
+      attachments: undefined,
+      answers: questions.reduce(
+        (acc, q) => {
+          acc[q.Question.id] = q.Question.type === "CHECKBOX" ? [] : "";
+          return acc;
+        },
+        {} as Record<string, string | string[]>,
+      ),
     },
   });
 
@@ -90,6 +96,17 @@ const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
     } else if (values.resumeSelection === "upload" && values.newResumeFile) {
       formData.append("newResumeFile", values.newResumeFile);
     }
+
+    if (values.coverLetter) {
+      formData.append("coverLetter", values.coverLetter);
+    }
+
+    if (values.attachments && values.attachments.length > 0) {
+      Array.from(values.attachments).forEach((file: any) => {
+        formData.append("attachments", file);
+      });
+    }
+
     formData.append("answers", JSON.stringify(values.answers));
 
     mutate(formData);
@@ -239,6 +256,57 @@ const JobForm = ({ questions, resumes, jobId }: JobFormProps) => {
               />
             )}
           </div>
+
+          <FormField
+            control={form.control}
+            name="coverLetter"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold">
+                  Cover Letter (Optional)
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us why you're a great fit for this role..."
+                    className="min-h-[150px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="attachments"
+            render={({ field: { onChange, value, ...rest } }) => {
+              const files = value as FileList | undefined;
+              return (
+                <FormItem>
+                  <FormLabel className="font-semibold">
+                    Additional Documents (Optional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      multiple
+                      className="cursor-pointer"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                      }}
+                      {...rest}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Upload portfolios, certifications, or references. Max 5MB
+                    per file.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
         </div>
         <Separator />
 

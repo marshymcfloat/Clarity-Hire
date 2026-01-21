@@ -15,11 +15,20 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      activeCompanyId?: string;
-      activeCompanyRole?: TeamRole;
-      isRecruiter: boolean; // <-- Add this
+      activeCompanyId: string;
+      activeCompanySlug: string;
+      activeCompanyRole: TeamRole;
+      isRecruiter: boolean;
       memberId: string;
     } & DefaultSession["user"];
+  }
+
+  interface User {
+    activeCompanyId: string;
+    activeCompanySlug: string;
+    activeCompanyRole: TeamRole;
+    isRecruiter: boolean;
+    memberId: string;
   }
 }
 
@@ -29,9 +38,10 @@ declare module "next-auth/jwt" {
    */
   interface JWT {
     id: string;
-    activeCompanyId?: string;
-    activeCompanyRole?: TeamRole;
-    isRecruiter: boolean; // <-- Add this
+    activeCompanyId: string;
+    activeCompanySlug: string;
+    activeCompanyRole: TeamRole;
+    isRecruiter: boolean;
     memberId: string;
   }
 }

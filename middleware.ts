@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { prisma } from "@/prisma/prisma";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -21,38 +20,34 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  try {
-    const companyMember = await prisma.companyMember.findUnique({
-      where: {
-        userId_companyId: {
-          userId: userId,
-          companyId: companyId,
-        },
-      },
-      include: {
-        company: {
-          select: { slug: true },
-        },
-      },
-    });
+  // Prisma Client cannot run in Edge Middleware.
+  // We should rely on standard redirection or handle this logic in a Server Component layout.
 
-    if (companyMember && companyMember.company.slug) {
-      const {
-        id: memberId,
-        company: { slug: companySlug },
-      } = companyMember;
+  // Redirect recruiters to their dashboard if they are on a generic page
+  // console.log("Middleware Token:", {
+  //   isRecruiter: token?.isRecruiter,
+  //   slug: token?.activeCompanySlug,
+  //   memberId: token?.memberId,
+  //   path: pathname
+  // });
 
-      const recruiterBasePath = `/${companySlug}/${memberId}`;
+  if (token.isRecruiter && token.activeCompanySlug && token.memberId) {
+    const recruiterBasePath = `/${token.activeCompanySlug}/${token.memberId}`;
 
-      if (pathname.startsWith(recruiterBasePath)) {
-        return NextResponse.next();
-      }
+    // Allow access if already on the recruiter's specific path
+    if (pathname.startsWith(recruiterBasePath)) {
+      return NextResponse.next();
+    }
 
+    // Redirect to dashboard if on strictly root or other generic landing/auth pages
+    if (
+      pathname === "/" ||
+      pathname === "/companies" ||
+      pathname === "/api/auth/signin"
+    ) {
       const redirectUrl = new URL(`${recruiterBasePath}/dashboard`, req.url);
       return NextResponse.redirect(redirectUrl);
     }
-  } catch (error) {
-    console.error("Error in middleware while fetching company data:", error);
   }
 
   return NextResponse.next();
