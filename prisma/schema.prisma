@@ -110,18 +110,20 @@ model Job {
   Company       Company         @relation(fields: [companyId], references: [id])
   QuestionOnJob QuestionOnJob[]
   SavedJob      SavedJob[]
+
+  @@index([companyId])
 }
 
 model Application {
-  id        String            @id @default(cuid())
-  userId    String
-  jobId     String
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  status    ApplicationStatus @default(SUBMITTED)
-  resumeId  String
-  coverLetter       String?
-  attachmentUrls    String[]            @default([])
+  id             String            @id @default(cuid())
+  userId         String
+  jobId          String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  status         ApplicationStatus @default(SUBMITTED)
+  resumeId       String
+  coverLetter    String?
+  attachmentUrls String[]          @default([])
 
   Job               Job                 @relation(fields: [jobId], references: [id])
   Resume            Resume              @relation(fields: [resumeId], references: [id])
@@ -129,6 +131,7 @@ model Application {
   ApplicationAnswer ApplicationAnswer[]
 
   @@unique([userId, jobId])
+  @@index([jobId])
 }
 
 model Resume {
