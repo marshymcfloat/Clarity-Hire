@@ -23,6 +23,8 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  // [Bolt] Performance: Index for cascading deletes
+  @@index([userId])
 }
 
 model User {
@@ -83,6 +85,8 @@ model CompanyMember {
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, companyId])
+  // [Bolt] Performance: Index for filtering by company and cascading deletes
+  @@index([companyId])
 }
 
 model Job {
@@ -144,6 +148,9 @@ model Resume {
 
   Application Application[]
   User        User          @relation(fields: [userId], references: [id])
+
+  // [Bolt] Performance: Index for filtering by user (e.g. dashboard)
+  @@index([userId])
 }
 
 model Question {
@@ -158,6 +165,9 @@ model Question {
   ApplicationAnswer ApplicationAnswer[]
   Company           Company             @relation(fields: [companyId], references: [id])
   QuestionOnJob     QuestionOnJob[]
+
+  // [Bolt] Performance: Index for filtering by company
+  @@index([companyId])
 }
 
 model ApplicationAnswer {
@@ -194,6 +204,8 @@ model SavedJob {
   job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobId])
+  // [Bolt] Performance: Index for cascading deletes
+  @@index([jobId])
 }
 
 enum TeamRole {
