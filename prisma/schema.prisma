@@ -180,6 +180,8 @@ model ApplicationAnswer {
   Question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([applicationId, questionId])
+  // [Bolt] Performance: Index for cascading deletes
+  @@index([questionId])
 }
 
 model QuestionOnJob {
@@ -192,6 +194,8 @@ model QuestionOnJob {
   Question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@id([jobId, questionId])
+  // [Bolt] Performance: Index for cascading deletes
+  @@index([questionId])
 }
 
 model SavedJob {
