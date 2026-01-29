@@ -136,6 +136,8 @@ model Application {
 
   @@unique([userId, jobId])
   @@index([jobId])
+  // [Bolt] Performance: Index for filtering by resume and referential integrity
+  @@index([resumeId])
 }
 
 model Resume {
