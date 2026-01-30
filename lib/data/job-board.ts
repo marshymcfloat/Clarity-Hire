@@ -3,7 +3,6 @@ import { unstable_cache } from "next/cache";
 import { Job } from "@prisma/client";
 
 export const getAvailableJobs = unstable_cache(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (companySlug: string, userId?: string) => {
     const company = await prisma.company.findFirst({
       where: { slug: companySlug },
@@ -11,7 +10,13 @@ export const getAvailableJobs = unstable_cache(
     });
 
     const availableJobs = await prisma.job.findMany({
-      where: { companyId: company?.id },
+      where: {
+        companyId: company?.id,
+        status: "PUBLISHED",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
       include: {
         SavedJob: {
           where: { userId: userId ?? "NO_USER" },
