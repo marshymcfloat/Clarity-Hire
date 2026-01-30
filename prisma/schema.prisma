@@ -115,7 +115,8 @@ model Job {
   QuestionOnJob QuestionOnJob[]
   SavedJob      SavedJob[]
 
-  @@index([companyId])
+  // [Bolt] Performance: Index for filtering by company and status, and sorting by creation date
+  @@index([companyId, status, createdAt])
 }
 
 model Application {
