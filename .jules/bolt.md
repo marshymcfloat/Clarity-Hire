@@ -9,3 +9,7 @@
 ## 2025-05-21 - [Composite Indexes]
 **Learning:** Single-column indexes are insufficient for queries with multiple filters (e.g., `where companyId=X and status=Y`) and sorting.
 **Action:** Use composite indexes (e.g., `@@index([companyId, status, createdAt])`) to cover the full query path (filter + sort) and avoid in-memory sorting.
+
+## 2025-05-21 - [Prisma CLI Version Pinning]
+**Learning:** Running `npx prisma` uses the latest version (e.g., v7.x), which may be incompatible with the project's `schema.prisma` (e.g., deprecating `datasource url`). The project uses v5.x.
+**Action:** Always use `npx prisma@<version>` matching `package.json` to ensure compatibility and avoid validation errors.
