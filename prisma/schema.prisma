@@ -117,6 +117,8 @@ model Job {
 
   // [Bolt] Performance: Index for filtering by company and status, and sorting by creation date
   @@index([companyId, status, createdAt])
+  // [Bolt] Performance: Index for filtering by company (e.g. dashboard) and sorting by creation date
+  @@index([companyId, createdAt])
 }
 
 model Application {
@@ -139,6 +141,8 @@ model Application {
   @@index([jobId])
   // [Bolt] Performance: Index for filtering by resume and referential integrity
   @@index([resumeId])
+  // [Bolt] Performance: Index for filtering by user (e.g. My Applications) and sorting by creation date
+  @@index([userId, createdAt])
 }
 
 model Resume {
