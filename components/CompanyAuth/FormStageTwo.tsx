@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 import { useForm } from "react-hook-form";
 import {
@@ -322,4 +323,4 @@ const FormStageTwo = ({ prevStep }: { prevStep: () => void }) => {
   );
 };
 
-export default FormStageTwo;
+export default React.memo(FormStageTwo);

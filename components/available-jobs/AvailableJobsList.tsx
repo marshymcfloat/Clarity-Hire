@@ -3,7 +3,7 @@
 import { JobCardData } from "@/types";
 import JobCard from "./JobCard";
 import { Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button } from "../ui/button";
 
 interface AvailableJobsListProps {
@@ -18,34 +18,41 @@ const AvailableJobsList = ({ jobs, companySlug }: AvailableJobsListProps) => {
 
   if (!jobs || jobs.length === 0) {
     return (
-      <div className="mt-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-slate-50 p-12 text-center h-[50vh]">
-        <Briefcase className="h-12 w-12 text-slate-400" />
-        <h3 className="mt-4 text-xl font-semibold text-slate-700">
-          No Position Found
+      <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center h-[400px]">
+        <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+          <Briefcase className="h-8 w-8 text-indigo-500" />
+        </div>
+        <h3 className="font-space font-bold text-xl text-slate-900 mb-2">
+          No Positions Found
         </h3>
-        <p className="mt-1 text-sm text-slate-500">
-          There are currently no available jobs. Please check back later.
+        <p className="max-w-[300px] text-slate-500 text-sm leading-relaxed">
+          There are currently no available jobs at{" "}
+          <span className="font-semibold text-slate-700">{companySlug}</span>.
+          Please check back later.
         </p>
       </div>
     );
   }
 
   const totalPages = Math.ceil(jobs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentJobs = jobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const handlePrevious = () => {
+  const currentJobs = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return jobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [jobs, currentPage]);
+
+  const handlePrevious = useCallback(() => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
+  }, [totalPages]);
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      <div className="flex-1 overflow-y-auto pr-2">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 pb-4">
+    <div className="flex flex-col h-full space-y-8">
+      <div className="flex-1">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {currentJobs.map((job) => (
             <JobCard
               companySlug={companySlug}
@@ -58,25 +65,27 @@ const AvailableJobsList = ({ jobs, companySlug }: AvailableJobsListProps) => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-4 border-t border-slate-100 mt-auto">
+        <div className="flex items-center justify-center gap-4 py-8 border-t border-slate-100 mt-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevious}
             disabled={currentPage === 1}
+            className="font-mono text-xs"
           >
-            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+            <ChevronLeft className="h-3 w-3 mr-1" /> Prev
           </Button>
-          <span className="text-sm font-medium text-slate-600">
-            Page {currentPage} of {totalPages}
+          <span className="text-xs font-mono font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-200">
+            {currentPage} / {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={handleNext}
             disabled={currentPage === totalPages}
+            className="font-mono text-xs"
           >
-            Next <ChevronRight className="h-4 w-4 ml-1" />
+            Next <ChevronRight className="h-3 w-3 ml-1" />
           </Button>
         </div>
       )}

@@ -20,7 +20,7 @@ async function uploadResumeToBlobStore(
 }
 
 export async function SubmitApplicationAction(formData: FormData) {
-  let uploadedBlobUrl: string | undefined;
+  const uploadedBlobUrls: string[] = [];
 
   try {
     const session = await getServerSession(authOptions);
@@ -56,7 +56,7 @@ export async function SubmitApplicationAction(formData: FormData) {
 
     if (newResumeFile instanceof File) {
       const { url, name } = await uploadResumeToBlobStore(newResumeFile);
-      uploadedBlobUrl = url;
+      uploadedBlobUrls.push(url); // Track for cleanup
 
       // Check for existing resume with same name for this user
       const existingResume = await prisma.resume.findFirst({
@@ -117,11 +117,10 @@ export async function SubmitApplicationAction(formData: FormData) {
 
     if (!validationResult.success) {
       console.error(
-        "Backend Validation Error (Cleanup needed):",
+        "Backend Validation Error:",
         validationResult.error.format(),
       );
-
-      return { success: false, error: "Invalid application data." };
+      throw new Error("Invalid application data."); // Throw to trigger cleanup
     }
 
     const { data: validatedData } = validationResult;
@@ -129,16 +128,20 @@ export async function SubmitApplicationAction(formData: FormData) {
     // Upload attachments if any
     const attachmentUrls: string[] = [];
     if (attachments && attachments.length > 0) {
-      const uploadPromises = attachments.map((file) =>
-        uploadResumeToBlobStore(file),
-      );
-      const results = await Promise.all(uploadPromises);
-      attachmentUrls.push(...results.map((r) => r.url));
-    }
+      const uploadPromises = attachments.map(async (file) => {
+        const { url } = await uploadResumeToBlobStore(file);
+        return url;
+      });
 
-    // Track blobs to clean up on error
-    const newBlobsToCleanup = [...attachmentUrls];
-    if (uploadedBlobUrl) newBlobsToCleanup.push(uploadedBlobUrl);
+      // Wait for all uploads
+      const results = await Promise.all(uploadPromises);
+
+      // Push to tracking array immediately
+      results.forEach((url) => {
+        attachmentUrls.push(url);
+        uploadedBlobUrls.push(url);
+      });
+    }
 
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const application = await tx.application.create({
@@ -146,7 +149,6 @@ export async function SubmitApplicationAction(formData: FormData) {
           userId,
           jobId: validatedData.jobId,
           resumeId: validatedData.resumeId,
-
           coverLetter: validatedData.coverLetter,
           attachmentUrls: attachmentUrls,
         },
@@ -163,29 +165,25 @@ export async function SubmitApplicationAction(formData: FormData) {
       await tx.applicationAnswer.createMany({ data: answerData });
     });
 
-    uploadedBlobUrl = undefined;
-
+    // Success! No cleanup needed.
     return { success: true, message: "Application submitted successfully!" };
-  } catch (err) {
+  } catch (err: any) {
     console.error("SubmitApplicationAction Caught Error:", err);
+
+    // Cleanup: Delete everyone we uploaded in this attempt
+    if (uploadedBlobUrls.length > 0) {
+      console.log(`Rolling back ${uploadedBlobUrls.length} file(s)...`);
+      await Promise.allSettled(uploadedBlobUrls.map((url) => del(url)));
+    }
+
+    const errorMessage =
+      err.message === "Invalid application data."
+        ? "Please check your input and try again."
+        : "An unexpected error occurred. Please try again.";
+
     return {
       success: false,
-      error: "An unexpected error occurred. Please try again.",
+      error: errorMessage,
     };
-  } finally {
-    if (uploadedBlobUrl) {
-      // Logic slightly flawed here as local var access restricted? No, scope is fine.
-      // Actually 'uploadedBlobUrl' is outside try/catch scope, but 'newBlobsToCleanup' is inside.
-      // We should rely on 'uploadedBlobUrl' variable for the resume.
-
-      // CLEANUP TODO: Ideally we track all created blobs in a robust way.
-      // For now, retaining existing logic for resume.
-      try {
-        console.log(`Cleaning up unused blob: ${uploadedBlobUrl}`);
-        await del(uploadedBlobUrl);
-      } catch (cleanupError) {
-        console.error("Failed to delete unused blob:", cleanupError);
-      }
-    }
   }
 }

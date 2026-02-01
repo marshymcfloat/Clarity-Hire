@@ -10,56 +10,71 @@ import {
 } from "../ui/dialog";
 import { Rocket, Building2, LogIn, ArrowLeft } from "lucide-react";
 import FormStageOne from "./FormStageOne";
-import { useState } from "react";
-import FormStageTwo from "./FormStageTwo";
+import { useCallback, useState, ReactNode } from "react";
 import { useDispatch } from "react-redux";
+import { cn } from "@/lib/utils";
 import { launghCompanySliceActions } from "@/lib/redux slices/LaunchCompanySlice";
 import AuthLoginForm from "../App Sidebar/auth/AuthLoginForm";
-import { cn } from "@/lib/utils";
+import FormStageTwo from "./FormStageTwo";
 
 type FormStepType = "SELECTION" | "CREATE_1" | "CREATE_2" | "LOGIN";
 
-const TRIGGER_BUTTON_CLASSNAME =
-  "font-bold bg-white/60 border border-slate-200/80 shadow-md shadow-black/10 text-slate-900 backdrop-blur-lg transform transition-all duration-300 hover:scale-105 hover:bg-white/80 hover:shadow-lg z-50 fixed bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:left-auto md:translate-x-0 md:top-8 md:right-8";
+interface CreateCompanyDialogProps {
+  trigger?: ReactNode;
+}
 
-const CreateCompanyDialog = () => {
+const TRIGGER_BUTTON_CLASSNAME =
+  "w-full sm:w-auto font-bold shadow-lg hover:shadow-xl transition-all duration-300";
+
+const CreateCompanyDialog = ({ trigger }: CreateCompanyDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formStep, setFormStep] = useState<FormStepType>("SELECTION");
 
   const dispatch = useDispatch();
 
-  function handleOpenChange(open: boolean) {
-    setIsOpen(open);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setIsOpen(open);
 
-    if (!open) {
-      dispatch(launghCompanySliceActions.resetForm());
-      // Small delay to reset view after dialog close animation
-      setTimeout(() => setFormStep("SELECTION"), 300);
-    }
-  }
+      if (!open) {
+        dispatch(launghCompanySliceActions.resetForm());
+        setTimeout(() => setFormStep("SELECTION"), 300);
+      }
+    },
+    [dispatch],
+  );
 
-  const handleBack = () => {
-    if (formStep === "CREATE_2") setFormStep("CREATE_1");
-    else setFormStep("SELECTION");
-  };
+  const handleBack = useCallback(() => {
+    setFormStep((prev) => (prev === "CREATE_2" ? "CREATE_1" : "SELECTION"));
+  }, []);
+
+  const handleNextStep = useCallback(() => setFormStep("CREATE_2"), []);
+  const handlePrevStep = useCallback(() => setFormStep("CREATE_1"), []);
+  const handleCreateStep = useCallback(() => setFormStep("CREATE_1"), []);
+  const handleLoginStep = useCallback(() => setFormStep("LOGIN"), []);
+  const handleClose = useCallback(() => setIsOpen(false), []);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className={TRIGGER_BUTTON_CLASSNAME}>
-          <Rocket className="mr-2 h-5 w-5" />
-          Launch Your Company
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button size="lg" className={TRIGGER_BUTTON_CLASSNAME}>
+            <Rocket className="mr-2 h-5 w-5" />
+            Launch Your Company
+          </Button>
+        )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-slate-200/50 shadow-2xl duration-300">
-        <div className="p-6">
-          <DialogHeader className="mb-6 relative">
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200">
+        <div className="p-8">
+          <DialogHeader className="mb-8 relative items-start">
             {formStep !== "SELECTION" && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute -left-2 -top-2 h-8 w-8 hover:bg-slate-100/50"
+                className="absolute -left-3 -top-3 h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100/50 rounded-full"
                 onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -67,69 +82,84 @@ const CreateCompanyDialog = () => {
             )}
             <DialogTitle
               className={cn(
-                "text-2xl font-bold text-center",
-                formStep !== "SELECTION" && "ml-4",
+                "text-2xl font-space font-bold text-slate-900 tracking-tight",
+                formStep !== "SELECTION" && "ml-6",
               )}
             >
-              {formStep === "LOGIN" ? "Company Login" : "Launch Your Company"}
+              {formStep === "LOGIN" ? "Welcome Back" : "Start Your Journey"}
             </DialogTitle>
+            <p className="text-sm text-slate-500 font-medium mt-1.5 ml-0.5">
+              {formStep === "SELECTION"
+                ? "Choose how you want to proceed"
+                : formStep === "LOGIN"
+                  ? "Access your dashboard"
+                  : "Create your company profile"}
+            </p>
           </DialogHeader>
 
           <div className="mt-2">
             {formStep === "SELECTION" && (
               <div className="grid gap-4">
                 <button
-                  onClick={() => setFormStep("CREATE_1")}
-                  className="flex flex-col items-center justify-center p-6 space-y-3 border border-slate-200 rounded-xl hover:border-violet-300 hover:shadow-md hover:bg-violet-50/30 transition-all duration-300 group text-center bg-white"
+                  onClick={handleCreateStep}
+                  className="relative group flex items-start gap-5 p-5 w-full text-left border border-slate-200 rounded-2xl hover:border-indigo-600/30 hover:shadow-lg hover:shadow-indigo-500/5 bg-slate-50/50 hover:bg-white transition-all duration-300 overflow-hidden"
                 >
-                  <div className="p-3 bg-violet-100/50 text-violet-600 rounded-full group-hover:scale-110 group-hover:bg-violet-100 transition-all duration-300">
-                    <Rocket className="w-8 h-8" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <div className="relative p-3 bg-white border border-slate-200 rounded-xl shadow-sm group-hover:scale-105 group-hover:border-indigo-100 group-hover:shadow-md transition-all duration-300 text-indigo-600">
+                    <Rocket className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-slate-800 group-hover:text-violet-700 transition-colors">
-                      New Company
+
+                  <div className="relative flex-1">
+                    <h3 className="font-bold text-lg text-slate-900 group-hover:text-indigo-700 transition-colors">
+                      Register New Company
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Register and launch a new company profile
+                    <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                      Create a new profile to start hiring talent and managing
+                      your team.
                     </p>
                   </div>
                 </button>
 
-                <div className="relative flex items-center py-2">
-                  <span className="flex-grow border-t border-slate-200"></span>
-                  <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-medium">
-                    Already have an account?
+                <div className="relative flex items-center py-3">
+                  <div className="flex-grow border-t border-slate-100"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                    Or
                   </span>
-                  <span className="flex-grow border-t border-slate-200"></span>
+                  <div className="flex-grow border-t border-slate-100"></div>
                 </div>
 
                 <button
-                  onClick={() => setFormStep("LOGIN")}
-                  className="flex items-center justify-center gap-4 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all duration-200 group w-full"
+                  onClick={handleLoginStep}
+                  className="group flex items-center gap-4 p-4 w-full text-left border border-transparent rounded-xl hover:bg-slate-50 transition-all duration-200"
                 >
-                  <div className="p-2 bg-slate-100 rounded-lg text-slate-600 group-hover:text-slate-900">
+                  <div className="p-2.5 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-white group-hover:text-slate-700 group-hover:shadow-sm transition-all duration-200">
                     <LogIn className="w-5 h-5" />
                   </div>
-                  <span className="font-semibold text-slate-700 group-hover:text-slate-900">
-                    Login to Company Dashboard
-                  </span>
+                  <div className="flex-1">
+                    <span className="block font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
+                      Login to Dashboard
+                    </span>
+                  </div>
+                  <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:text-slate-500 rotate-180 transition-all transform group-hover:translate-x-1" />
                 </button>
               </div>
             )}
 
             {formStep === "CREATE_1" && (
-              <FormStageOne nextStep={() => setFormStep("CREATE_2")} />
+              <div className="animate-in fade-in slide-in-from-right-8 duration-300">
+                <FormStageOne nextStep={handleNextStep} />
+              </div>
             )}
             {formStep === "CREATE_2" && (
-              <FormStageTwo prevStep={() => setFormStep("CREATE_1")} />
+              <div className="animate-in fade-in slide-in-from-right-8 duration-300">
+                <FormStageTwo prevStep={handlePrevStep} />
+              </div>
             )}
 
             {formStep === "LOGIN" && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <AuthLoginForm
-                  onClose={() => setIsOpen(false)}
-                  hideTitle={true}
-                />
+              <div className="animate-in fade-in slide-in-from-right-8 duration-300">
+                <AuthLoginForm onClose={handleClose} hideTitle={true} />
               </div>
             )}
           </div>

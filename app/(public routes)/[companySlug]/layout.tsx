@@ -8,7 +8,7 @@ const CompanyLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <NextSessionProvider>
       <SidebarProvider>
-        <div className="flex w-screen h-screen">
+        <div className="flex w-full h-screen overflow-hidden bg-white">
           <AppSidebar />
           <MainContent>{children}</MainContent>
         </div>

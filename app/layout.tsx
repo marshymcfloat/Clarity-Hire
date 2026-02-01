@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import TanstackProvider from "@/components/providers/TanstackProvider";
 import ReduxProvider from "@/components/providers/ReduxProvider";
@@ -18,9 +18,56 @@ const geistMono = Geist_Mono({
 
 const inter = Inter({ subsets: ["latin"] });
 
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "ClarityHire",
-  description: "No more uncertainties in job seeking and hiring",
+  title: {
+    default: "ClarityHire | Modern Job Board",
+    template: "%s | ClarityHire",
+  },
+  description:
+    "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+  keywords: [
+    "Job Board",
+    "Careers",
+    "Hiring",
+    "Employment",
+    "Tech Jobs",
+    "Remote Jobs",
+  ],
+  authors: [{ name: "ClarityHire Team" }],
+  creator: "ClarityHire",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://clarityhire.com",
+    title: "ClarityHire | Modern Job Board",
+    description:
+      "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+    siteName: "ClarityHire",
+    images: [
+      {
+        url: "/og-image.jpg", // Ensure this exists or replace with a valid URL
+        width: 1200,
+        height: 630,
+        alt: "ClarityHire",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ClarityHire | Modern Job Board",
+    description:
+      "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -31,11 +78,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        style={{
-          background:
-            "radial-gradient(125% 125% at 50% 90%, #fff 40%, #7c3aed 100%)",
-        }}
-        className={`${geistSans.variable} ${geistMono.variable} antialiased ${inter.className}`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased ${inter.className}`}
       >
         <ReduxProvider>
           <TanstackProvider>

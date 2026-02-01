@@ -115,10 +115,13 @@ model Job {
   QuestionOnJob QuestionOnJob[]
   SavedJob      SavedJob[]
 
-  // [Bolt] Performance: Index for filtering by company and status, and sorting by creation date
-  @@index([companyId, status, createdAt])
-  // [Bolt] Performance: Index for filtering by company (e.g. dashboard) and sorting by creation date
-  @@index([companyId, createdAt])
+
+  @@index([companyId])
+  @@index([status, createdAt]) // Optimize "Recent Active Jobs" queries
+  @@index([location]) // Optimize Location Search
+  @@index([jobType])
+  @@index([experienceLevel])
+
 }
 
 model Application {
@@ -138,11 +141,10 @@ model Application {
   ApplicationAnswer ApplicationAnswer[]
 
   @@unique([userId, jobId])
-  @@index([jobId])
-  // [Bolt] Performance: Index for filtering by resume and referential integrity
-  @@index([resumeId])
-  // [Bolt] Performance: Index for filtering by user (e.g. My Applications) and sorting by creation date
-  @@index([userId, createdAt])
+
+  @@index([jobId]) // Optimize fetching applicants for a job
+  @@index([status]) // Optimize filtering applicants by status
+  @@index([userId]) // Optimize "My Applications"
 }
 
 model Resume {

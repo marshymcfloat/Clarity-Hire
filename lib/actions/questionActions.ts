@@ -11,15 +11,34 @@ import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
 import { QuestionTypeEnum } from "@prisma/client";
 
+import {
+  checkRateLimit,
+  verifyCompanyAccess,
+  JOB_MANAGEMENT_ROLES,
+} from "../security";
+
 export async function createNewQuestionAction(values: CreateQuestionValues) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || !session.user.activeCompanyId) {
+    if (
+      !session?.user ||
+      !session.user.activeCompanyId ||
+      !session.user.activeCompanySlug
+    ) {
       return { success: false, error: "Please Login First" };
     }
 
-    const { activeCompanyId } = session.user;
+    // Security Fix: Verify Access vs Database
+    const accessCheck = await verifyCompanyAccess(
+      session.user.id,
+      session.user.activeCompanySlug,
+      JOB_MANAGEMENT_ROLES,
+    );
+
+    if (!accessCheck.authorized || !accessCheck.company) {
+      return { success: false, error: accessCheck.error || "Access Denied" };
+    }
 
     const validationResult = createQuestionSchema.safeParse(values);
 
@@ -35,7 +54,7 @@ export async function createNewQuestionAction(values: CreateQuestionValues) {
         options: options as string[],
         Company: {
           connect: {
-            id: activeCompanyId,
+            id: accessCheck.company.id, // Use verified ID
           },
         },
       },
