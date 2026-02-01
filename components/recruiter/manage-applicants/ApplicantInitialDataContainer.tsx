@@ -23,17 +23,7 @@ const ApplicantInitialDataContainer = async () => {
   })) as unknown as Applicant[];
 
   return (
-    <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Manage Applicants
-          </h2>
-          <p className="text-muted-foreground">
-            View and manage candidates across all your jobs.
-          </p>
-        </div>
-      </div>
+    <div className="h-full flex-1 flex-col">
       <ApplicantDataTable data={applications} columns={applicantColumns} />
     </div>
   );

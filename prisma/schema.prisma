@@ -117,7 +117,7 @@ model Job {
   QuestionOnJob    QuestionOnJob[]
   SavedJob         SavedJob[]
 }
-}
+
 
 model Question {
   id                String              @id @default(cuid())

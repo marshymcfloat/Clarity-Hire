@@ -12,52 +12,87 @@ interface StatsOverviewProps {
 
 export default function StatsOverview({ stats }: StatsOverviewProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-200/20 backdrop-blur-sm">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 ">
+      {/* Active Jobs - Distinct Primary Style */}
+      <Card className="group relative overflow-hidden border-violet-100 bg-white dark:border-violet-900/30 dark:bg-slate-950/50 shadow-sm transition-all hover:shadow-md hover:border-violet-200">
+        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <Briefcase className="h-24 w-24 text-violet-600 rotate-12" />
+        </div>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-          <Briefcase className="h-4 w-4 text-violet-500" />
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Active Jobs
+          </CardTitle>
+          <div className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg group-hover:bg-violet-100 dark:group-hover:bg-violet-900/30 transition-colors">
+            <Briefcase className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.activeJobs}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-3xl font-bold font-space text-slate-900 dark:text-white mt-2">
+            {stats.activeJobs}
+          </div>
+          <p className="text-xs font-medium text-violet-600 dark:text-violet-400 mt-1">
             Current open positions
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/20 backdrop-blur-sm">
+      {/* Total Applicants - Secondary Info */}
+      <Card className="group border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/50 shadow-sm transition-all hover:shadow-md hover:border-blue-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
             Total Applicants
           </CardTitle>
-          <Users className="h-4 w-4 text-blue-500" />
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalApplicants}</div>
-          <p className="text-xs text-muted-foreground">Across all jobs</p>
+          <div className="text-3xl font-bold font-space text-slate-900 dark:text-white mt-2">
+            {stats.totalApplicants}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Across all active postings
+          </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-200/20 backdrop-blur-sm">
+      {/* Hired - Success Metric */}
+      <Card className="group border-emerald-100 bg-emerald-50/30 dark:border-emerald-900/30 dark:bg-emerald-950/10 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Hired</CardTitle>
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-400">
+            Hired Candidates
+          </CardTitle>
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalHired}</div>
-          <p className="text-xs text-muted-foreground">Candidates joined</p>
+          <div className="text-3xl font-bold font-space text-emerald-900 dark:text-white mt-2">
+            {stats.totalHired}
+          </div>
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-500 mt-1">
+            Joined the team
+          </p>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Interviews - Action Item */}
+      <Card className="group border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/50 shadow-sm transition-all hover:shadow-md">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Interviews</CardTitle>
-          <MessagesSquare className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Interviews
+          </CardTitle>
+          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-slate-200 transition-colors">
+            <MessagesSquare className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.activeInterviews}</div>
-          <p className="text-xs text-muted-foreground">Scheduled this week</p>
+          <div className="text-3xl font-bold font-space text-slate-900 dark:text-white mt-2">
+            {stats.activeInterviews}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Scheduled this week
+          </p>
         </CardContent>
       </Card>
     </div>

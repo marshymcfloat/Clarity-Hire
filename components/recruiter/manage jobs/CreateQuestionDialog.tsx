@@ -23,7 +23,10 @@ const CreateQuestionDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="ml-auto bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200">
+        <Button
+          variant="outline"
+          className="ml-auto border-dashed border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           New Question
         </Button>

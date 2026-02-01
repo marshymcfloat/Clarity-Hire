@@ -83,7 +83,7 @@ const StatCardInitialDataContainer = async () => {
       <StatsOverview stats={stats} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 h-full">
-        <div className="md:col-span-1 lg:col-span-4 rounded-xl border bg-card text-card-foreground shadow p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="md:col-span-1 lg:col-span-4 rounded-xl border bg-card text-card-foreground shadow p-6 flex flex-col items-center justify-center max-h-[400px]">
           <p className="text-muted-foreground">Analytics Chart Coming Soon</p>
         </div>
 

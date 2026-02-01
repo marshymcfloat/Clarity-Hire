@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const MainContent = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className="relative flex-1 h-full overflow-y-auto bg-white/50">
+    <main className="relative flex-1 h-full  overflow-y-auto bg-white/50">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-indigo-50 blur-[100px] rounded-full mix-blend-multiply will-change-transform transform-gpu" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-50 blur-[100px] rounded-full mix-blend-multiply will-change-transform transform-gpu" />

@@ -48,14 +48,16 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
       const user = row.original.User;
       return (
         <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-950 shadow-sm">
             <AvatarImage src={user.image || undefined} />
-            <AvatarFallback>
+            <AvatarFallback className="bg-violet-100 text-violet-700 font-bold text-xs">
               {user.name?.slice(0, 2).toUpperCase() || "UN"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-medium">{user.name || "Unknown"}</span>
+            <span className="font-medium text-slate-900 dark:text-slate-100">
+              {user.name || "Unknown"}
+            </span>
             <span className="text-xs text-muted-foreground">{user.email}</span>
           </div>
         </div>
@@ -69,14 +71,19 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
       return (
         <Button
           variant="ghost"
+          className="text-xs font-space font-semibold uppercase tracking-wider pl-0 hover:bg-transparent"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Job Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-3 w-3" />
         </Button>
       );
     },
-    cell: ({ row }) => <div className="pl-4">{row.original.Job.title}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium text-slate-700 dark:text-slate-300">
+        {row.original.Job.title}
+      </div>
+    ),
   },
   {
     accessorKey: "status",
@@ -84,21 +91,29 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as ApplicationStatus;
 
-      const statusColors: Record<ApplicationStatus, string> = {
-        SUBMITTED: "bg-blue-500",
-        IN_REVIEW: "bg-yellow-500",
-        INTERVIEWING: "bg-purple-500",
-        OFFERED: "bg-green-500",
-        HIRED: "bg-emerald-600",
-        REJECTED: "bg-red-500",
-        WITHDRAWN: "bg-gray-500",
+      const secondaryVariant = {
+        SUBMITTED:
+          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
+        IN_REVIEW:
+          "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20",
+        INTERVIEWING:
+          "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20",
+        OFFERED:
+          "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20",
+        HIRED:
+          "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
+        REJECTED:
+          "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20",
+        WITHDRAWN:
+          "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
       };
 
       return (
         <Badge
-          className={`${statusColors[status]} hover:${statusColors[status]} text-white border-0`}
+          variant="secondary"
+          className={`font-normal border shadow-sm capitalize ${secondaryVariant[status]}`}
         >
-          {status.replace("_", " ")}
+          {status.replace("_", " ").toLowerCase()}
         </Badge>
       );
     },
@@ -108,8 +123,12 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
     header: "Applied Date",
     cell: ({ row }) => {
       return (
-        <div className="text-muted-foreground">
-          {new Date(row.getValue("createdAt")).toLocaleDateString()}
+        <div className="text-muted-foreground font-mono text-xs">
+          {new Date(row.getValue("createdAt")).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
         </div>
       );
     },
@@ -120,13 +139,17 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
     cell: ({ row }) => {
       const resume = row.original.Resume;
       if (!resume || !resume.url) {
-        return <span className="text-muted-foreground text-sm">No Resume</span>;
+        return (
+          <span className="text-muted-foreground text-xs italic">
+            No Resume
+          </span>
+        );
       }
       return (
         <Link
           href={resume.url}
           target="_blank"
-          className="flex items-center text-primary hover:underline"
+          className="flex items-center text-sm font-medium text-violet-600 hover:text-violet-700 hover:underline"
         >
           <FileText className="mr-2 h-4 w-4" />
           View

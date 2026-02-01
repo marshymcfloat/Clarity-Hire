@@ -54,10 +54,14 @@ export const jobColumns: ColumnDef<
 
       return (
         <Badge
-          className={clsx("capitalize", {
-            "bg-green-400 text-white": status === "PUBLISHED",
-            "bg-yellow-400 text-black": status === "DRAFT",
-            "bg-gray-400 text-white": status === "ARCHIVED",
+          variant="secondary"
+          className={clsx("capitalize font-normal border shadow-sm", {
+            "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20":
+              status === "PUBLISHED",
+            "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700":
+              status === "DRAFT",
+            "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20":
+              status === "ARCHIVED",
           })}
         >
           {status.toLowerCase()}
