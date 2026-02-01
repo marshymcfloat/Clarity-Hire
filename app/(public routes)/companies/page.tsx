@@ -2,6 +2,8 @@ import CompaniesDataContainer from "@/components/companies/CompaniesDataContaine
 import CompaniesGridSkeleton from "@/components/companies/CompaniesGridSkeleton";
 import React, { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 const CompaniesPage = () => {
   return (
     <main className="min-h-screen bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
