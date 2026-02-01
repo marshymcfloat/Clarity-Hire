@@ -5,6 +5,7 @@ import JobCard from "./JobCard";
 import { Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { Button } from "../ui/button";
+import { Job } from "@/lib/generated/prisma/client";
 
 interface AvailableJobsListProps {
   jobs: (JobCardData & { isSaved: boolean })[];
@@ -15,6 +16,22 @@ const ITEMS_PER_PAGE = 9;
 
 const AvailableJobsList = ({ jobs, companySlug }: AvailableJobsListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil((jobs?.length || 0) / ITEMS_PER_PAGE);
+
+  const currentJobs = useMemo(() => {
+    if (!jobs) return [];
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return jobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [jobs, currentPage]);
+
+  const handlePrevious = useCallback(() => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  }, [totalPages]);
 
   if (!jobs || jobs.length === 0) {
     return (
@@ -33,21 +50,6 @@ const AvailableJobsList = ({ jobs, companySlug }: AvailableJobsListProps) => {
       </div>
     );
   }
-
-  const totalPages = Math.ceil(jobs.length / ITEMS_PER_PAGE);
-
-  const currentJobs = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return jobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [jobs, currentPage]);
-
-  const handlePrevious = useCallback(() => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  }, []);
-
-  const handleNext = useCallback(() => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  }, [totalPages]);
 
   return (
     <div className="flex flex-col h-full space-y-8">

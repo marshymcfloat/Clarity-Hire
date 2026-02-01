@@ -9,13 +9,14 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+
+import { Building2, Calendar, MapPin } from "lucide-react";
+import Link from "next/link";
 import {
   Application,
   ApplicationStatus,
   WorkArrangement,
-} from "@prisma/client";
-import { Building2, Calendar, MapPin } from "lucide-react";
-import Link from "next/link";
+} from "@/lib/generated/prisma/client";
 
 type ApplicationWithJob = Application & {
   Job: {

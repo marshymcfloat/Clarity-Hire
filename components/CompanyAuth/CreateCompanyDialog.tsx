@@ -8,14 +8,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Rocket, Building2, LogIn, ArrowLeft } from "lucide-react";
+import { Rocket, LogIn, ArrowLeft } from "lucide-react";
 import FormStageOne from "./FormStageOne";
 import { useCallback, useState, ReactNode } from "react";
-import { useDispatch } from "react-redux";
 import { cn } from "@/lib/utils";
 import { launghCompanySliceActions } from "@/lib/redux slices/LaunchCompanySlice";
 import AuthLoginForm from "../App Sidebar/auth/AuthLoginForm";
 import FormStageTwo from "./FormStageTwo";
+import { useDispatch } from "react-redux";
 
 type FormStepType = "SELECTION" | "CREATE_1" | "CREATE_2" | "LOGIN";
 

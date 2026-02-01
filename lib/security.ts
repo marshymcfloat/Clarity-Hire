@@ -1,5 +1,5 @@
 import { prisma } from "@/prisma/prisma";
-import { TeamRole } from "@prisma/client";
+import { TeamRole } from "@/lib/generated/prisma/enums";
 
 /**
  * Verifies that a user has a valid, active membership in a company with the required role.
@@ -28,7 +28,7 @@ export async function verifyCompanyAccess(
   const membership = await prisma.companyMember.findFirst({
     where: {
       userId,
-      company: {
+      Company: {
         slug: companySlug,
       },
       role: {
@@ -36,7 +36,7 @@ export async function verifyCompanyAccess(
       },
     },
     include: {
-      company: {
+      Company: {
         select: {
           id: true,
           slug: true,
@@ -56,7 +56,7 @@ export async function verifyCompanyAccess(
   return {
     authorized: true,
     membership,
-    company: membership.company,
+    company: membership.Company,
   };
 }
 

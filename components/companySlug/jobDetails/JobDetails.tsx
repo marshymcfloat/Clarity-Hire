@@ -1,19 +1,12 @@
 import Link from "next/link";
-import {
-  Job,
-  Company,
-  ExperienceLevel,
-  JobType,
-  WorkArrangement,
-} from "@prisma/client";
+import { Job, Company } from "@/lib/generated/prisma/client";
 import {
   ArrowLeft,
   Building2,
   FileText,
   TrendingUp,
-  MapPin,
-  CheckCircle2,
   DollarSign,
+  CheckCircle2,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,7 +27,7 @@ const DetailPill = ({
   label,
   value,
 }: {
-  icon: any;
+  icon: React.ElementType;
   label: string;
   value: string;
 }) => (
@@ -138,17 +131,25 @@ const JobDetails = ({
             <DetailPill
               icon={Building2}
               label="Arrangement"
-              value={WORK_ARRANGEMENT_MAP[workArrangement]}
+              value={
+                WORK_ARRANGEMENT_MAP[
+                  workArrangement as keyof typeof WORK_ARRANGEMENT_MAP
+                ]
+              }
             />
             <DetailPill
               icon={FileText}
               label="Type"
-              value={JOB_TYPE_MAP[jobType]}
+              value={JOB_TYPE_MAP[jobType as keyof typeof JOB_TYPE_MAP]}
             />
             <DetailPill
               icon={TrendingUp}
               label="Experience"
-              value={EXPERIENCE_LEVEL_MAP[experienceLevel]}
+              value={
+                EXPERIENCE_LEVEL_MAP[
+                  experienceLevel as keyof typeof EXPERIENCE_LEVEL_MAP
+                ]
+              }
             />
             <DetailPill
               icon={DollarSign}
@@ -162,7 +163,7 @@ const JobDetails = ({
               Key Responsibilities
             </h2>
             <ul className="space-y-4">
-              {responsibilities.map((item, i) => (
+              {responsibilities.map((item: string, i: number) => (
                 <li key={i} className="flex items-start gap-4 group">
                   <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 group-hover:scale-125 transition-transform" />
                   <span className="text-slate-600 leading-relaxed">{item}</span>
@@ -176,7 +177,7 @@ const JobDetails = ({
               Qualifications
             </h2>
             <ul className="space-y-4">
-              {qualifications.map((item, i) => (
+              {qualifications.map((item: string, i: number) => (
                 <li key={i} className="flex items-start gap-4">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                   <span className="text-slate-600 leading-relaxed">{item}</span>
@@ -193,7 +194,7 @@ const JobDetails = ({
                 Required Skills
               </h3>
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
+                {skills.map((skill: string) => (
                   <Badge
                     key={skill}
                     variant="secondary"
@@ -212,7 +213,7 @@ const JobDetails = ({
                 Perks & Benefits
               </h3>
               <ul className="space-y-4">
-                {benefits.map((benefit, i) => (
+                {benefits.map((benefit: string, i: number) => (
                   <li
                     key={i}
                     className="flex items-start gap-3 text-sm font-medium"

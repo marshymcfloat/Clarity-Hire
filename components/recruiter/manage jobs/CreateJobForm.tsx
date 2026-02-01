@@ -6,15 +6,15 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { useParams } from "next/navigation";
-import type {
+
+import {
+  Job,
+  QuestionOnJob,
   JobStatus,
   JobType,
   ExperienceLevel,
   WorkArrangement,
-  Job,
-  QuestionOnJob,
-} from "@prisma/client";
-
+} from "@/lib/generated/prisma/client";
 import { createJobSchema, CreateJobValues } from "@/lib/zod schemas/jobSchema";
 import {
   createJobAction,

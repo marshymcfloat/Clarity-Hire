@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -19,57 +20,61 @@ model Account {
   token_type        String?
   scope             String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   // [Bolt] Performance: Index for cascading deletes
   @@index([userId])
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  username  String?  @unique
-  image     String?
+model Application {
+  id                String              @id @default(cuid())
+  userId            String
+  jobId             String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  status            ApplicationStatus   @default(SUBMITTED)
+  resumeId          String
+  attachmentUrls    String[]            @default([])
+  coverLetter       String?
+  Job               Job                 @relation(fields: [jobId], references: [id])
+  Resume            Resume              @relation(fields: [resumeId], references: [id])
+  User              User                @relation(fields: [userId], references: [id])
+  ApplicationAnswer ApplicationAnswer[]
 
-  hashedPassword String?
+  @@unique([userId, jobId])
+}
 
-  emailVerified DateTime?
+model ApplicationAnswer {
+  id            String      @id @default(cuid())
+  answer        String[]
+  applicationId String
+  questionId    String
+  Application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Question      Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  Account      Account[]
-  Application  Application[]
-  Resume       Resume[]
-  memberships  CompanyMember[]
-  ownedCompany Company?        @relation("CompanyOwner")
-  savedJobs    SavedJob[]
+  @@unique([applicationId, questionId])
 }
 
 model Company {
-  id          String       @id @default(cuid())
-  name        String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  coverImage  String?
-  description String
-  image       String?
-  location    String
-  slug        String       @unique
-  websiteUrl  String?
-  companySize CompanySize?
-
-  plan String @default("free")
-
-  ownerId String @unique
-  owner   User   @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  stripeCustomerId String? @unique
-
-  Job      Job[]
-  Question Question[]
-  members  CompanyMember[]
+  id               String          @id @default(cuid())
+  name             String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  coverImage       String?
+  description      String
+  image            String?
+  location         String
+  slug             String          @unique
+  websiteUrl       String?
+  ownerId          String          @unique
+  plan             String          @default("free")
+  stripeCustomerId String?         @unique
+  companySize      CompanySize?
+  User             User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  CompanyMember    CompanyMember[]
+  Job              Job[]
+  Question         Question[]
 }
 
 model CompanyMember {
@@ -79,9 +84,8 @@ model CompanyMember {
   role      TeamRole @default(MEMBER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, companyId])
   // [Bolt] Performance: Index for filtering by company and cascading deletes
@@ -91,13 +95,11 @@ model CompanyMember {
 model Job {
   id               String          @id @default(cuid())
   title            String
-  summary          String
   companyId        String
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   department       String
   experienceLevel  ExperienceLevel
-  status           JobStatus       @default(DRAFT)
   jobType          JobType
   location         String
   salaryMax        Int?
@@ -108,66 +110,23 @@ model Job {
   skills           String[]
   workArrangement  WorkArrangement @default(ON_SITE)
   workSchedule     String?
-
-  Application   Application[]
-  Company       Company         @relation(fields: [companyId], references: [id])
-  QuestionOnJob QuestionOnJob[]
-  SavedJob      SavedJob[]
-
-
-  @@index([companyId])
-  @@index([status, createdAt]) // Optimize "Recent Active Jobs" queries
-  @@index([location]) // Optimize Location Search
-  @@index([jobType])
-  @@index([experienceLevel])
+  summary          String
+  status           JobStatus       @default(DRAFT)
+  Application      Application[]
+  Company          Company         @relation(fields: [companyId], references: [id])
+  QuestionOnJob    QuestionOnJob[]
+  SavedJob         SavedJob[]
 }
-
-model Application {
-  id             String            @id @default(cuid())
-  userId         String
-  jobId          String
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  status         ApplicationStatus @default(SUBMITTED)
-  resumeId       String
-  coverLetter    String?
-  attachmentUrls String[]          @default([])
-
-  Job               Job                 @relation(fields: [jobId], references: [id])
-  Resume            Resume              @relation(fields: [resumeId], references: [id])
-  User              User                @relation(fields: [userId], references: [id])
-  ApplicationAnswer ApplicationAnswer[]
-
-  @@unique([userId, jobId])
-  @@index([jobId]) // Optimize fetching applicants for a job
-  @@index([status]) // Optimize filtering applicants by status
-  @@index([userId]) // Optimize "My Applications"
-}
-
-model Resume {
-  id        String    @id @default(cuid())
-  name      String
-  userId    String
-  url       String
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-
-  Application Application[]
-  User        User          @relation(fields: [userId], references: [id])
-
-  // [Bolt] Performance: Index for filtering by user (e.g. dashboard)
-  @@index([userId])
 }
 
 model Question {
-  id        String           @id @default(cuid())
-  question  String
-  companyId String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  type      QuestionTypeEnum
-  options   String[]
-
+  id                String              @id @default(cuid())
+  question          String
+  companyId         String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  type              QuestionTypeEnum
+  options           String[]
   ApplicationAnswer ApplicationAnswer[]
   Company           Company             @relation(fields: [companyId], references: [id])
   QuestionOnJob     QuestionOnJob[]
@@ -176,32 +135,29 @@ model Question {
   @@index([companyId])
 }
 
-model ApplicationAnswer {
-  id            String   @id @default(cuid())
-  answer        String[]
-  applicationId String
-  questionId    String
-
-  Application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  Question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@unique([applicationId, questionId])
-  // [Bolt] Performance: Index for cascading deletes
-  @@index([questionId])
-}
 
 model QuestionOnJob {
   jobId      String
   questionId String
-  order      Int     @default(0)
-  isRequired Boolean @default(true)
-
-  Job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  order      Int      @default(0)
+  isRequired Boolean  @default(true)
+  Job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@id([jobId, questionId])
   // [Bolt] Performance: Index for cascading deletes
   @@index([questionId])
+}
+
+model Resume {
+  id          String        @id @default(cuid())  
+  name        String
+  userId      String
+  url         String
+  createdAt   DateTime      @default(now())
+  deletedAt   DateTime?     @updatedAt
+  Application Application[]
+  User        User          @relation(fields: [userId], references: [id])
 }
 
 model SavedJob {
@@ -209,26 +165,30 @@ model SavedJob {
   userId    String
   jobId     String
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobId])
   // [Bolt] Performance: Index for cascading deletes
   @@index([jobId])
 }
 
-enum TeamRole {
-  ADMIN
-  RECRUITER
-  HIRING_MANAGER
-  MEMBER
-}
-
-enum JobStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  username       String?         @unique
+  image          String?
+  emailVerified  DateTime?
+  hashedPassword String?
+  Account        Account[]
+  Application    Application[]
+  Company        Company?
+  CompanyMember  CompanyMember[]
+  Resume         Resume[]
+  SavedJob       SavedJob[]
 }
 
 enum ApplicationStatus {
@@ -241,6 +201,14 @@ enum ApplicationStatus {
   HIRED
 }
 
+enum CompanySize {
+  SIZE_1_10
+  SIZE_11_50
+  SIZE_51_200
+  SIZE_201_1000
+  SIZE_1000_PLUS
+}
+
 enum ExperienceLevel {
   INTERNSHIP
   ENTRY_LEVEL
@@ -249,6 +217,12 @@ enum ExperienceLevel {
   SENIOR
   STAFF
   PRINCIPAL
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 enum JobType {
@@ -266,16 +240,15 @@ enum QuestionTypeEnum {
   TRUE_OR_FALSE
 }
 
+enum TeamRole {
+  ADMIN
+  RECRUITER
+  HIRING_MANAGER
+  MEMBER
+}
+
 enum WorkArrangement {
   ON_SITE
   HYBRID
   REMOTE
-}
-
-enum CompanySize {
-  SIZE_1_10
-  SIZE_11_50
-  SIZE_51_200
-  SIZE_201_1000
-  SIZE_1000_PLUS
 }

@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { prisma } from "@/prisma/prisma";
 import { authOptions } from "../auth";
-import { Prisma } from "@prisma/client";
+
 import { createBackendApplicationSchema } from "../zod schemas/auth/jobApplicationSchemas";
 import { put, del } from "@vercel/blob";
 
@@ -98,7 +98,8 @@ export async function SubmitApplicationAction(formData: FormData) {
 
     if (!answersString)
       return { success: false, error: "Application answers are missing." };
-    const answers = JSON.parse(answersString);
+    const answers: Record<string, string | string[]> =
+      JSON.parse(answersString);
 
     const questionsOnJob = await prisma.questionOnJob.findMany({
       where: { jobId },
@@ -143,7 +144,7 @@ export async function SubmitApplicationAction(formData: FormData) {
       });
     }
 
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    await prisma.$transaction(async (tx) => {
       const application = await tx.application.create({
         data: {
           userId,
@@ -167,7 +168,7 @@ export async function SubmitApplicationAction(formData: FormData) {
 
     // Success! No cleanup needed.
     return { success: true, message: "Application submitted successfully!" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("SubmitApplicationAction Caught Error:", err);
 
     // Cleanup: Delete everyone we uploaded in this attempt
@@ -177,7 +178,7 @@ export async function SubmitApplicationAction(formData: FormData) {
     }
 
     const errorMessage =
-      err.message === "Invalid application data."
+      err instanceof Error && err.message === "Invalid application data."
         ? "Please check your input and try again."
         : "An unexpected error occurred. Please try again.";
 

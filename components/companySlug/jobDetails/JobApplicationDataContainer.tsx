@@ -2,8 +2,7 @@ import { prisma } from "@/prisma/prisma";
 import JobForm from "./JobForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Resume } from "@prisma/client";
-
+import { Resume } from "@/lib/generated/prisma/client";
 import LoginRequiredState from "./LoginRequiredState";
 
 const JobApplicationDataContainer = async ({ jobId }: { jobId: string }) => {

@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus } from "@/lib/generated/prisma/enums";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

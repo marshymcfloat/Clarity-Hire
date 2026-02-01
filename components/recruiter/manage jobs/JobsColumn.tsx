@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Job, JobStatus, QuestionOnJob } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
 import { Ellipsis, Trash } from "lucide-react";
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditJobDialog from "./EditJobDialog";
+import { Job, JobStatus, QuestionOnJob } from "@/lib/generated/prisma/client";
 
 export const jobColumns: ColumnDef<
   Job & { QuestionOnJob: QuestionOnJob[] } & {

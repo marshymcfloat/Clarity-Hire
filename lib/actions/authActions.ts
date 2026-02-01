@@ -1,6 +1,5 @@
 "use server";
 
-import { prisma } from "@/prisma/prisma";
 import {
   authRegisterSchema,
   AuthRegisterValues,
@@ -10,8 +9,11 @@ import {
   CompanyCreationStageTwoValues,
 } from "../zod schemas/auth/authSchemas";
 import bcrypt, { hash } from "bcryptjs";
-import { CompanySize, Prisma } from "@prisma/client";
+import { CompanySize } from "@/lib/generated/prisma/enums";
 import { formatToTitleCase } from "../utils";
+import { prisma } from "@/prisma/prisma";
+
+// Local types removed, imported from prisma.ts
 
 export async function authRegisterAction(values: AuthRegisterValues) {
   try {
@@ -159,38 +161,36 @@ export async function createCompanyAndUserAction(
     const formattedFullName = formatToTitleCase(data.fullname);
     const formattedCompanyName = formatToTitleCase(data.companyName);
 
-    const newCompany = await prisma.$transaction(
-      async (tx: Prisma.TransactionClient) => {
-        const newUser = await tx.user.create({
-          data: {
-            name: formattedFullName,
-            email: data.workEmail,
-            hashedPassword: hashedPassword,
-          },
-        });
+    const newCompany = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name: formattedFullName,
+          email: data.workEmail,
+          hashedPassword: hashedPassword,
+        },
+      });
 
-        const company = await tx.company.create({
-          data: {
-            name: formattedCompanyName,
-            slug: data.companySlug,
-            ownerId: newUser.id,
-            companySize: data.companySize as CompanySize,
-            description: "",
-            location: "",
-          },
-        });
+      const company = await tx.company.create({
+        data: {
+          name: formattedCompanyName,
+          slug: data.companySlug,
+          ownerId: newUser.id,
+          companySize: data.companySize as CompanySize,
+          description: "",
+          location: "",
+        },
+      });
 
-        await tx.companyMember.create({
-          data: {
-            userId: newUser.id,
-            companyId: company.id,
-            role: "ADMIN",
-          },
-        });
+      await tx.companyMember.create({
+        data: {
+          userId: newUser.id,
+          companyId: company.id,
+          role: "ADMIN",
+        },
+      });
 
-        return company;
-      },
-    );
+      return company;
+    });
 
     return { success: true, company: { slug: newCompany.slug } };
   } catch (err) {

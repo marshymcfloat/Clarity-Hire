@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ApplicationStatus } from "@prisma/client";
+
 import Link from "next/link";
 import UpdateStatusDialog from "./UpdateStatusDialog";
 import RejectApplicationDialog from "./RejectApplicationDialog";
 import React from "react";
+import { ApplicationStatus } from "@/lib/generated/prisma/enums";
 
 export type Applicant = {
   id: string;

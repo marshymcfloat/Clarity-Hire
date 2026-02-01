@@ -3,14 +3,14 @@ import { prisma } from "@/prisma/prisma";
 import { getServerSession } from "next-auth";
 import React from "react";
 import ApplicantDataTable from "./ApplicantDataTable";
-import { applicantColumns } from "./ApplicantColumns";
+import { applicantColumns, Applicant } from "./ApplicantColumns";
 
 const ApplicantInitialDataContainer = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.activeCompanyId) return null;
 
-  const applications = await prisma.application.findMany({
+  const applications = (await prisma.application.findMany({
     where: {
       Job: { companyId: session.user.activeCompanyId },
     },
@@ -20,7 +20,7 @@ const ApplicantInitialDataContainer = async () => {
       Resume: { select: { url: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
-  });
+  })) as unknown as Applicant[];
 
   return (
     <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">

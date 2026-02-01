@@ -1,12 +1,10 @@
 "use client";
 
 import React from "react";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
 export const MainContent = ({ children }: { children: React.ReactNode }) => {
-  const { open, setOpen, isMobile } = useSidebar();
-
   return (
     <main className="relative flex-1 h-full overflow-y-auto bg-white/50">
       <div className="fixed inset-0 z-0 pointer-events-none">

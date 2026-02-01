@@ -3,7 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Question, QuestionOnJob, Resume } from "@prisma/client";
+import type {
+  Question,
+  QuestionOnJob,
+  Resume,
+} from "@/lib/generated/prisma/client";
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";

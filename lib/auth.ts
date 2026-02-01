@@ -3,8 +3,8 @@ import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
-import { TeamRole, CompanyMember } from "@prisma/client";
 
+import { CompanyMember, TeamRole } from "./generated/prisma/client";
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -21,7 +21,7 @@ export const authOptions: AuthOptions = {
         const userExists = await prisma.user.findUnique({
           where: { email: credentials.email },
           include: {
-            memberships: true,
+            CompanyMember: true,
           },
         });
 
@@ -118,9 +118,9 @@ export const authOptions: AuthOptions = {
         const dbUserWithMembership = await prisma.user.findUnique({
           where: { email: user.email! },
           include: {
-            memberships: {
+            CompanyMember: {
               include: {
-                company: {
+                Company: {
                   select: { slug: true },
                 },
               },
@@ -137,17 +137,17 @@ export const authOptions: AuthOptions = {
             TeamRole.HIRING_MANAGER,
           ];
 
-          const isRecruiter = dbUserWithMembership.memberships.some(
+          const isRecruiter = dbUserWithMembership.CompanyMember.some(
             (membership: CompanyMember) =>
               recruiterRoles.includes(membership.role),
           );
 
           token.isRecruiter = isRecruiter;
-          if (dbUserWithMembership.memberships.length > 0) {
-            const membership = dbUserWithMembership.memberships[0];
+          if (dbUserWithMembership.CompanyMember.length > 0) {
+            const membership = dbUserWithMembership.CompanyMember[0];
             token.activeCompanyId = membership.companyId;
             token.activeCompanyRole = membership.role;
-            token.activeCompanySlug = membership.company.slug;
+            token.activeCompanySlug = membership.Company.slug;
             token.memberId = membership.id;
           }
         }

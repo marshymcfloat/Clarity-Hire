@@ -6,9 +6,7 @@ import {
   Bookmark,
   Users,
   Loader2,
-  Settings,
   LayoutDashboard,
-  LogOut,
   Building2,
 } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
@@ -24,7 +22,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import UserButton from "./UserButton";

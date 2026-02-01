@@ -1,5 +1,16 @@
-import { Question, QuestionOnJob, QuestionTypeEnum } from "@prisma/client";
+import type { Question, QuestionOnJob } from "@/lib/generated/prisma/client";
 import { z } from "zod";
+
+export const QuestionTypeEnum = {
+  TEXT: "TEXT",
+  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  NUMBER: "NUMBER",
+  CHECKBOX: "CHECKBOX",
+  TRUE_OR_FALSE: "TRUE_OR_FALSE",
+} as const;
+
+export type QuestionTypeEnum =
+  (typeof QuestionTypeEnum)[keyof typeof QuestionTypeEnum];
 
 type QuestionOnJobWithQuestion = QuestionOnJob & {
   Question: Question;

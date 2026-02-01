@@ -5,12 +5,13 @@ import React from "react";
 import JobDataTable from "./JobDataTable";
 import { jobColumns } from "./JobsColumn";
 import DashboardHeader from "./DashboardHeader";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 const ManageJobsInitialDataContainer = async () => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.activeCompanyId) return null;
 
-  const jobsWithCounts = await prisma.job.findMany({
+  const jobsWithCounts = (await prisma.job.findMany({
     where: { companyId: session.user.activeCompanyId },
     include: {
       QuestionOnJob: true,
@@ -19,14 +20,19 @@ const ManageJobsInitialDataContainer = async () => {
       },
     },
     orderBy: { createdAt: "desc" },
-  });
+  })) as unknown as Prisma.JobGetPayload<{
+    include: {
+      QuestionOnJob: true;
+      _count: {
+        select: { Application: true };
+      };
+    };
+  }>[];
 
   const totalJobs = jobsWithCounts.length;
-  const activeCandidates = jobsWithCounts.reduce(
-    (acc: number, job: (typeof jobsWithCounts)[number]) =>
-      acc + (job._count?.Application || 0),
-    0,
-  );
+  const activeCandidates = jobsWithCounts.reduce((acc, job) => {
+    return acc + (job._count?.Application ?? 0);
+  }, 0);
 
   return (
     <div className="flex flex-col gap-6">

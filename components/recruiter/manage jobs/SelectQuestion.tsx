@@ -1,6 +1,6 @@
 "use client";
 
-import { Question } from "@prisma/client";
+import { Question } from "@/lib/generated/prisma/client";
 import {
   Item,
   ItemActions,

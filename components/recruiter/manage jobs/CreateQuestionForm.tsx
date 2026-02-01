@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { QuestionTypeEnum } from "@prisma/client";
+import { QuestionTypeEnum } from "@/lib/zod schemas/questionSchema";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,7 +91,7 @@ const CreateQuestionForm = ({ onSuccess }: { onSuccess: () => void }) => {
                   {(
                     Object.entries(QUESTION_TYPE_MAP) as [
                       QuestionTypeEnum,
-                      string
+                      string,
                     ][]
                   ).map(([key, value]) => (
                     <SelectItem value={key} key={key}>

@@ -19,22 +19,22 @@ export default async function SavedJobsPage({
   const savedJobs = await prisma.savedJob.findMany({
     where: {
       userId: session.user.id,
-      job: {
+      Job: {
         Company: {
           slug: companySlug,
         },
       },
     },
     include: {
-      job: true,
+      Job: true,
     },
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  const formattedJobs = savedJobs.map((saved: (typeof savedJobs)[number]) => ({
-    ...saved.job,
+  const formattedJobs = savedJobs.map((saved) => ({
+    ...saved.Job,
     isSaved: true,
   }));
 

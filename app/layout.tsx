@@ -24,6 +24,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.clarityhire.online"),
   title: {
     default: "ClarityHire | Modern Job Board",
     template: "%s | ClarityHire",

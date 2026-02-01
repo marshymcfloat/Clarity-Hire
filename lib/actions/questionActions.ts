@@ -9,13 +9,9 @@ import {
 } from "../zod schemas/questionSchema";
 import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
-import { QuestionTypeEnum } from "@prisma/client";
+import { QuestionTypeEnum } from "../generated/prisma/enums";
 
-import {
-  checkRateLimit,
-  verifyCompanyAccess,
-  JOB_MANAGEMENT_ROLES,
-} from "../security";
+import { verifyCompanyAccess, JOB_MANAGEMENT_ROLES } from "../security";
 
 export async function createNewQuestionAction(values: CreateQuestionValues) {
   try {

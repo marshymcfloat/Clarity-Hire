@@ -9,7 +9,6 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
-import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import {
   checkRateLimit,
@@ -221,7 +220,7 @@ export async function createJobAction(values: createJobActionPayload) {
 
     const { questions, ...jobData } = validationResult.data;
 
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    await prisma.$transaction(async (tx) => {
       const createdJob = await tx.job.create({
         data: {
           ...jobData,
@@ -293,7 +292,7 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
 
     const { questions, ...jobData } = validationResult.data;
 
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    await prisma.$transaction(async (tx) => {
       // Ensure the job actually belongs to the company we authorized
       const existingJob = await tx.job.findFirst({
         where: {
@@ -333,8 +332,11 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
       `/${payload.values.companySlug}/${payload.values.memberId}/manage-jobs`,
     );
     return { success: true, message: "Job updated successfully!" };
-  } catch (err: any) {
-    if (err.message === "Job not found or access denied.") {
+  } catch (err: unknown) {
+    if (
+      err instanceof Error &&
+      err.message === "Job not found or access denied."
+    ) {
       return {
         success: false,
         error: "Job does not exist or you do not have permission.",

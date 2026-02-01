@@ -1,7 +1,7 @@
 "use client";
 
 import { Control, FieldValues, Path } from "react-hook-form";
-import { Question, QuestionTypeEnum } from "@prisma/client";
+import { Question, QuestionTypeEnum } from "@/lib/generated/prisma/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   FormControl,
@@ -119,7 +119,7 @@ const QuestionRenderer = <TFieldValues extends FieldValues>({
                   defaultValue={field.value}
                   className="flex flex-col space-y-2 pt-2"
                 >
-                  {question.options.map((option) => (
+                  {question.options.map((option: string) => (
                     <FormItem
                       key={option}
                       className="flex items-center space-x-3 space-y-0"
@@ -151,7 +151,7 @@ const QuestionRenderer = <TFieldValues extends FieldValues>({
                 </FormLabel>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {question.options.map((option) => (
+                {question.options.map((option: string) => (
                   <FormField
                     key={option}
                     control={control}

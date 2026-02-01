@@ -2,7 +2,7 @@
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/prisma/prisma";
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus } from "@/lib/generated/prisma/client";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 

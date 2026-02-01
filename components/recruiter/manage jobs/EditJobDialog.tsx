@@ -11,7 +11,7 @@ import {
 import { Edit } from "lucide-react";
 import CreateJobForm from "./CreateJobForm";
 import { useRef, useState } from "react";
-import { Job, QuestionOnJob } from "@prisma/client";
+import { Job, QuestionOnJob } from "@/lib/generated/prisma/client";
 
 const EditJobDialog = ({
   job,

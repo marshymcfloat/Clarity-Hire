@@ -39,11 +39,15 @@ const JobCard = React.memo(
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-600 text-[11px] font-medium uppercase tracking-wide border border-slate-100">
               <TrendingUp className="w-3 h-3 text-slate-400" />
-              {EXPERIENCE_LEVEL_MAP[job.experienceLevel]}
+              {
+                EXPERIENCE_LEVEL_MAP[
+                  job.experienceLevel as keyof typeof EXPERIENCE_LEVEL_MAP
+                ]
+              }
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-600 text-[11px] font-medium uppercase tracking-wide border border-slate-100">
               <Briefcase className="w-3 h-3 text-slate-400" />
-              {JOB_TYPE_MAP[job.jobType]}
+              {JOB_TYPE_MAP[job.jobType as keyof typeof JOB_TYPE_MAP]}
             </span>
           </div>
 

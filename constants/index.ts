@@ -1,11 +1,60 @@
-import {
-  ApplicationStatus,
-  ExperienceLevel,
-  JobStatus,
-  JobType,
-  QuestionTypeEnum,
-  WorkArrangement,
-} from "@prisma/client";
+// Define enums locally to avoid importing from @prisma/client in client-side code
+export const ApplicationStatus = {
+  SUBMITTED: "SUBMITTED",
+  IN_REVIEW: "IN_REVIEW",
+  INTERVIEWING: "INTERVIEWING",
+  OFFERED: "OFFERED",
+  REJECTED: "REJECTED",
+  WITHDRAWN: "WITHDRAWN",
+  HIRED: "HIRED",
+} as const;
+export type ApplicationStatus =
+  (typeof ApplicationStatus)[keyof typeof ApplicationStatus];
+
+export const ExperienceLevel = {
+  INTERNSHIP: "INTERNSHIP",
+  ENTRY_LEVEL: "ENTRY_LEVEL",
+  ASSOCIATE: "ASSOCIATE",
+  MID_LEVEL: "MID_LEVEL",
+  SENIOR: "SENIOR",
+  STAFF: "STAFF",
+  PRINCIPAL: "PRINCIPAL",
+} as const;
+export type ExperienceLevel =
+  (typeof ExperienceLevel)[keyof typeof ExperienceLevel];
+
+export const JobStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
+
+export const JobType = {
+  FULL_TIME: "FULL_TIME",
+  PART_TIME: "PART_TIME",
+  CONTRACT: "CONTRACT",
+  INTERNSHIP: "INTERNSHIP",
+} as const;
+export type JobType = (typeof JobType)[keyof typeof JobType];
+
+export const QuestionTypeEnum = {
+  TEXT: "TEXT",
+  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  NUMBER: "NUMBER",
+  CHECKBOX: "CHECKBOX",
+  TRUE_OR_FALSE: "TRUE_OR_FALSE",
+} as const;
+export type QuestionTypeEnum =
+  (typeof QuestionTypeEnum)[keyof typeof QuestionTypeEnum];
+
+export const WorkArrangement = {
+  ON_SITE: "ON_SITE",
+  HYBRID: "HYBRID",
+  REMOTE: "REMOTE",
+} as const;
+export type WorkArrangement =
+  (typeof WorkArrangement)[keyof typeof WorkArrangement];
 
 let companyId = 1;
 let jobId = 1000;
