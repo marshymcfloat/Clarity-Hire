@@ -1,4 +1,4 @@
-import { Job } from "@prisma/client";
+import { JobCardData } from "@/types";
 
 import { MapPin, TrendingUp, Clock } from "lucide-react";
 
@@ -18,7 +18,7 @@ import ProgressLink from "../ui/ProgressLink";
 import SaveJobButton from "./SaveJobButton";
 
 interface JobCardProps {
-  job: Job;
+  job: JobCardData;
   companySlug: string;
   isSaved?: boolean;
 }
@@ -36,7 +36,7 @@ const JobCard = ({ job, companySlug, isSaved = false }: JobCardProps) => {
           </CardTitle>
           <SaveJobButton jobId={job.id} initialIsSaved={isSaved} />
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            <Badge variant="secondary" className="flex i  tems-center gap-1.5">
+            <Badge variant="secondary" className="flex items-center gap-1.5">
               <MapPin size={14} />
               {job.location}
             </Badge>
