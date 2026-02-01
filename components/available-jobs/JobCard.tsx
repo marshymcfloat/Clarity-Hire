@@ -1,10 +1,11 @@
 import React from "react";
-import { JobCardData } from "@/types";
+
 import { MapPin, TrendingUp, Clock, ArrowRight, Briefcase } from "lucide-react";
 import { EXPERIENCE_LEVEL_MAP, JOB_TYPE_MAP } from "@/constants";
 import { formatPostedDate } from "@/lib/utils";
 import ProgressLink from "../ui/ProgressLink";
 import SaveJobButton from "./SaveJobButton";
+import { JobCardData } from "@/types";
 
 interface JobCardProps {
   job: JobCardData;

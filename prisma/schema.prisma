@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -121,7 +120,6 @@ model Job {
   @@index([location]) // Optimize Location Search
   @@index([jobType])
   @@index([experienceLevel])
-
 }
 
 model Application {
@@ -141,7 +139,6 @@ model Application {
   ApplicationAnswer ApplicationAnswer[]
 
   @@unique([userId, jobId])
-
   @@index([jobId]) // Optimize fetching applicants for a job
   @@index([status]) // Optimize filtering applicants by status
   @@index([userId]) // Optimize "My Applications"
