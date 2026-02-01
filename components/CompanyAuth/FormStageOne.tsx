@@ -21,6 +21,7 @@ import { launghCompanySliceActions } from "@/lib/redux slices/LaunchCompanySlice
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import React from "react";
 
 const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
   const dispatch = useDispatch();
@@ -187,4 +188,4 @@ const FormStageOne = ({ nextStep }: { nextStep: () => void }) => {
   );
 };
 
-export default FormStageOne;
+export default React.memo(FormStageOne);

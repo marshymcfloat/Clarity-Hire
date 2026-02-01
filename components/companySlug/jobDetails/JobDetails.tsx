@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Job,
   Company,
@@ -5,11 +6,18 @@ import {
   JobType,
   WorkArrangement,
 } from "@prisma/client";
-import { Building2, FileText, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  FileText,
+  TrendingUp,
+  MapPin,
+  CheckCircle2,
+  DollarSign,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 
 import {
   EXPERIENCE_LEVEL_MAP,
@@ -21,34 +29,23 @@ import ApplyJobSheet from "./ApplyJobSheet";
 
 type JobWithCompany = Job & { Company: Company };
 
-const JobMiniDetails = ({
-  arrangement,
-  type,
-  experience,
+const DetailPill = ({
+  icon: Icon,
+  label,
+  value,
 }: {
-  arrangement: WorkArrangement;
-  type: JobType;
-  experience: ExperienceLevel;
+  icon: any;
+  label: string;
+  value: string;
 }) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Badge
-      variant="secondary"
-      className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300"
-    >
-      <Building2 size={13} /> {WORK_ARRANGEMENT_MAP[arrangement]}
-    </Badge>
-    <Badge
-      variant="secondary"
-      className="flex items-center gap-1.5 px-3 py-1 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300"
-    >
-      <FileText size={13} /> {JOB_TYPE_MAP[type]}
-    </Badge>
-    <Badge
-      variant="secondary"
-      className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
-    >
-      <TrendingUp size={13} /> {EXPERIENCE_LEVEL_MAP[experience]}
-    </Badge>
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+      {label}
+    </span>
+    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+      <Icon className="w-4 h-4 text-indigo-500" />
+      {value}
+    </div>
   </div>
 );
 
@@ -76,131 +73,131 @@ const JobDetails = ({
   } = jobDetails;
 
   return (
-    <div className="w-full h-full p-0 md:p-8 space-y-8 overflow-y-auto relative bg-slate-50/50 dark:bg-black/20">
-      <Card className="border-b shadow-sm ring-0 rounded-none md:rounded-xl sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md transition-all duration-200">
-        <CardContent className="p-4 md:p-8">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
-              <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-slate-100 dark:border-zinc-800 shadow-sm shrink-0">
-                <AvatarImage
-                  src={Company.image || undefined}
-                  alt={`${Company.name} logo`}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-xl md:text-2xl font-bold bg-violet-100 text-violet-600">
-                  {getInitials(Company.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-2 md:space-y-3 w-full">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
-                    {title}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm md:text-base text-slate-500 font-medium">
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300">
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span>{Company.name}</span>
-                    </div>
-                    <span>•</span>
-                    <span className="text-slate-500">{location}</span>
-                  </div>
-                </div>
-                <div className="hidden md:block">
-                  <JobMiniDetails
-                    arrangement={workArrangement}
-                    experience={experienceLevel}
-                    type={jobType}
-                  />
-                </div>
+    <div className="relative w-full min-h-full text-slate-900">
+      <div className="sticky top-4 z-50 bg-white/40 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 w-full md:w-auto ">
+            <Link
+              href={`/${Company.slug}/available-jobs`}
+              className="mr-2 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <Avatar className="h-12 w-12 rounded-xl border border-slate-100 bg-white">
+              <AvatarImage
+                src={Company.image || undefined}
+                className="object-cover"
+              />
+              <AvatarFallback className="font-bold bg-indigo-50 text-indigo-600 text-lg">
+                {getInitials(Company.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="font-space font-bold text-xl md:text-2xl text-slate-900 leading-tight">
+                {title}
+              </h1>
+              <div className="flex items-center gap-2 text-slate-500 text-sm">
+                <span className="font-medium text-slate-700">
+                  {Company.name}
+                </span>
+                <span className="text-slate-300">•</span>
+                <span>{location}</span>
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-row items-center justify-between md:flex-col md:items-end gap-4 md:min-w-[200px] w-full md:w-auto mt-2 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-zinc-800">
-              <div className="flex flex-col items-start md:items-end">
-                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {formatSalary(salaryMin, salaryMax)}
-                </p>
-                <p className="text-xs md:text-sm text-muted-foreground font-medium">
-                  per month
-                </p>
-              </div>
-              <ApplyJobSheet
-                jobTitle={jobDetails.title}
-                jobSummary={jobDetails.summary}
-                jobId={jobId}
-              />
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+            <div className="hidden md:flex flex-col items-end">
+              <span className="font-bold text-lg text-slate-900">
+                {formatSalary(salaryMin, salaryMax)}
+              </span>
+              <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">
+                Monthly Salary
+              </span>
             </div>
-
-            <div className="md:hidden w-full pt-2">
-              <JobMiniDetails
-                arrangement={workArrangement}
-                experience={experienceLevel}
-                type={jobType}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="px-4 md:px-0 grid grid-cols-1 gap-8 md:gap-12 md:grid-cols-3 max-w-7xl mx-auto">
-        <div className="space-y-10 md:col-span-2">
-          <div className="prose prose-slate dark:prose-invert max-w-none">
-            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-slate-50 flex items-center gap-2">
-              <span className="w-1 h-6 bg-violet-500 rounded-full"></span>
-              Job Summary
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">{summary}</p>
-          </div>
-
-          <div className="prose prose-slate dark:prose-invert max-w-none">
-            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-slate-50 flex items-center gap-2">
-              <span className="w-1 h-6 bg-violet-500 rounded-full"></span>
-              Responsibilities
-            </h2>
-            <ul className="grid gap-3">
-              {responsibilities.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-3 text-muted-foreground"
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-2 shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="prose prose-slate dark:prose-invert max-w-none">
-            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-slate-50 flex items-center gap-2">
-              <span className="w-1 h-6 bg-violet-500 rounded-full"></span>
-              Qualifications
-            </h2>
-            <ul className="grid gap-3">
-              {qualifications.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-3 text-muted-foreground"
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-2 shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            <ApplyJobSheet
+              jobTitle={jobDetails.title}
+              jobSummary={jobDetails.summary}
+              jobId={jobId}
+              // Updated trigger styling inside the sheet typically, or wrapper here
+            />
           </div>
         </div>
+      </div>
 
-        <div className="space-y-8 md:col-span-1">
+      <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-8 space-y-12">
+          <section>
+            <h2 className="font-space font-bold text-xl text-slate-900 mb-4 flex items-center gap-2">
+              About the Role
+            </h2>
+            <p className="text-slate-600 leading-7 text-lg">{summary}</p>
+          </section>
+
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+            <DetailPill
+              icon={Building2}
+              label="Arrangement"
+              value={WORK_ARRANGEMENT_MAP[workArrangement]}
+            />
+            <DetailPill
+              icon={FileText}
+              label="Type"
+              value={JOB_TYPE_MAP[jobType]}
+            />
+            <DetailPill
+              icon={TrendingUp}
+              label="Experience"
+              value={EXPERIENCE_LEVEL_MAP[experienceLevel]}
+            />
+            <DetailPill
+              icon={DollarSign}
+              label="Salary"
+              value={formatSalary(salaryMin, salaryMax).split(" ")[0]}
+            />{" "}
+          </section>
+
+          <section>
+            <h2 className="font-space font-bold text-xl text-slate-900 mb-6">
+              Key Responsibilities
+            </h2>
+            <ul className="space-y-4">
+              {responsibilities.map((item, i) => (
+                <li key={i} className="flex items-start gap-4 group">
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 group-hover:scale-125 transition-transform" />
+                  <span className="text-slate-600 leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="font-space font-bold text-xl text-slate-900 mb-6">
+              Qualifications
+            </h2>
+            <ul className="space-y-4">
+              {qualifications.map((item, i) => (
+                <li key={i} className="flex items-start gap-4">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="text-slate-600 leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div className="lg:col-span-4 space-y-8">
           {skills.length > 0 && (
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-slate-100 dark:border-zinc-800 shadow-sm">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
-                Skills Required
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <h3 className="font-space font-bold text-slate-900 mb-4">
+                Required Skills
               </h3>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill) => (
                   <Badge
                     key={skill}
                     variant="secondary"
-                    className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:text-slate-300 font-normal"
+                    className="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-default"
                   >
                     {skill}
                   </Badge>
@@ -208,21 +205,24 @@ const JobDetails = ({
               </div>
             </div>
           )}
+
           {benefits.length > 0 && (
-            <div className="bg-gradient-to-br from-violet-500/5 to-purple-500/5 p-6 rounded-xl border border-violet-100/50 dark:border-violet-900/20">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-violet-600/80 dark:text-violet-400/80">
+            <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/20">
+              <h3 className="font-space font-bold mb-6 text-indigo-100 uppercase tracking-widest text-xs">
                 Perks & Benefits
               </h3>
-              <ul className="space-y-3">
-                {benefits.map((item) => (
+              <ul className="space-y-4">
+                {benefits.map((benefit, i) => (
                   <li
-                    key={item}
-                    className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400"
+                    key={i}
+                    className="flex items-start gap-3 text-sm font-medium"
                   >
-                    <div className="p-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 shrink-0">
-                      <TrendingUp size={12} />
+                    <div className="p-1 rounded-full bg-white/20 shrink-0">
+                      <TrendingUp className="w-3 h-3 text-white" />
                     </div>
-                    {item}
+                    <span className="leading-snug text-indigo-50">
+                      {benefit}
+                    </span>
                   </li>
                 ))}
               </ul>

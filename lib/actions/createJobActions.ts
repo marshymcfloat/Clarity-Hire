@@ -11,6 +11,11 @@ import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import {
+  checkRateLimit,
+  verifyCompanyAccess,
+  JOB_MANAGEMENT_ROLES,
+} from "../security";
 
 export type GenerateSummaryPayload = {
   jobTitle: string;
@@ -35,6 +40,22 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function generateJobDescriptionField(
   payload: GenerateSummaryPayload,
 ) {
+  const session = await getServerSession(authOptions);
+
+  // 1. Auth Check (Basic) - Rate limiting is tied to user ID
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // 2. Rate Limiting (Phase 1 Security)
+  const isAllowed = checkRateLimit(`ai-gen-${session.user.id}`, 5, 60); // 5 request per minute
+  if (!isAllowed) {
+    return {
+      success: false,
+      error: "Rate limit exceeded. Please try again later.",
+    };
+  }
+
   const { jobTitle, department, experienceLevel, jobType, location, skills } =
     payload;
 
@@ -82,6 +103,22 @@ export async function generateJobDescriptionField(
 }
 
 export async function generateJobDescriptionList(payload: GenerateListPayload) {
+  const session = await getServerSession(authOptions);
+
+  // 1. Auth Check
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // 2. Rate Limiting
+  const isAllowed = checkRateLimit(`ai-gen-list-${session.user.id}`, 5, 60);
+  if (!isAllowed) {
+    return {
+      success: false,
+      error: "Rate limit exceeded. Please try again later.",
+    };
+  }
+
   const { fieldName, jobTitle, summary, experienceLevel, jobType } = payload;
 
   if (!jobTitle) {
@@ -171,6 +208,17 @@ export async function createJobAction(values: createJobActionPayload) {
       return { success: false, error: "Invalid Input" };
     }
 
+    // Phase 1 Security: Verify DB Access (Avoid Stale Session)
+    const accessCheck = await verifyCompanyAccess(
+      session.user.id,
+      values.companySlug,
+      JOB_MANAGEMENT_ROLES,
+    );
+
+    if (!accessCheck.authorized || !accessCheck.company) {
+      return { success: false, error: accessCheck.error || "Access Denied" };
+    }
+
     const { questions, ...jobData } = validationResult.data;
 
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -180,7 +228,7 @@ export async function createJobAction(values: createJobActionPayload) {
           status: "PUBLISHED",
           Company: {
             connect: {
-              id: session.user.activeCompanyId,
+              id: accessCheck.company.id, // Use verified ID from DB
             },
           },
         },
@@ -232,9 +280,32 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
       };
     }
 
+    // Phase 1 Security: Verify DB Access
+    const accessCheck = await verifyCompanyAccess(
+      session.user.id,
+      payload.values.companySlug,
+      JOB_MANAGEMENT_ROLES,
+    );
+
+    if (!accessCheck.authorized) {
+      return { success: false, error: accessCheck.error || "Access Denied" };
+    }
+
     const { questions, ...jobData } = validationResult.data;
 
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Ensure the job actually belongs to the company we authorized
+      const existingJob = await tx.job.findFirst({
+        where: {
+          id: payload.id,
+          companyId: accessCheck.company!.id, // Verify ownership
+        },
+      });
+
+      if (!existingJob) {
+        throw new Error("Job not found or access denied.");
+      }
+
       await tx.job.update({
         data: { ...jobData },
         where: { id: payload.id },
@@ -262,8 +333,14 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
       `/${payload.values.companySlug}/${payload.values.memberId}/manage-jobs`,
     );
     return { success: true, message: "Job updated successfully!" };
-  } catch {
-    console.error("There is an unexpected error occured");
-    return { success: false, error: "There in unexpected error occured" };
+  } catch (err: any) {
+    if (err.message === "Job not found or access denied.") {
+      return {
+        success: false,
+        error: "Job does not exist or you do not have permission.",
+      };
+    }
+    console.error("Unexpected error:", err);
+    return { success: false, error: "An unexpected error occurred." };
   }
 }
