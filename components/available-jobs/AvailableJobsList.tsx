@@ -1,6 +1,7 @@
 "use client";
 
 import { JobCardData } from "@/types";
+import JobCard from "./JobCard";
 import { Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { Button } from "../ui/button";
