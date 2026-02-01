@@ -1,13 +1,13 @@
 "use client";
 
-import { Job } from "@prisma/client";
+import { JobCardData } from "@/types";
 import JobCard from "./JobCard";
 import { Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 
 interface AvailableJobsListProps {
-  jobs: (Job & { isSaved: boolean })[];
+  jobs: (JobCardData & { isSaved: boolean })[];
   companySlug: string;
 }
 

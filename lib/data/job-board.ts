@@ -1,6 +1,6 @@
 import { prisma } from "@/prisma/prisma";
 import { unstable_cache } from "next/cache";
-import { Job } from "@prisma/client";
+import { JobCardData } from "@/types";
 
 export const getAvailableJobs = unstable_cache(
   async (companySlug: string, userId?: string) => {
@@ -17,7 +17,14 @@ export const getAvailableJobs = unstable_cache(
       orderBy: {
         createdAt: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        summary: true,
+        experienceLevel: true,
+        jobType: true,
+        location: true,
+        createdAt: true,
         SavedJob: {
           where: { userId: userId ?? "NO_USER" },
           select: { id: true },
@@ -25,10 +32,12 @@ export const getAvailableJobs = unstable_cache(
       },
     });
 
-    return availableJobs.map((job: Job & { SavedJob: { id: string }[] }) => ({
-      ...job,
-      isSaved: job.SavedJob.length > 0,
-    }));
+    return availableJobs.map(
+      (job: JobCardData & { SavedJob: { id: string }[] }) => ({
+        ...job,
+        isSaved: job.SavedJob.length > 0,
+      }),
+    );
   },
   ["available-jobs"],
   {

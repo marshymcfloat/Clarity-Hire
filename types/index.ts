@@ -12,3 +12,15 @@ export type ConfiguredComapnies = Prisma.CompanyGetPayload<{
     websiteUrl: true;
   };
 }>;
+
+export type JobCardData = Prisma.JobGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    summary: true;
+    experienceLevel: true;
+    jobType: true;
+    location: true;
+    createdAt: true;
+  };
+}>;

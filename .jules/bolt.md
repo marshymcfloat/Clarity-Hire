@@ -13,3 +13,7 @@
 ## 2025-05-21 - [Prisma CLI Version Pinning]
 **Learning:** Running `npx prisma` uses the latest version (e.g., v7.x), which may be incompatible with the project's `schema.prisma` (e.g., deprecating `datasource url`). The project uses v5.x.
 **Action:** Always use `npx prisma@<version>` matching `package.json` to ensure compatibility and avoid validation errors.
+
+## 2025-05-21 - [Optimized Data Selection]
+**Learning:** `prisma.findMany` selects all fields by default, which is wasteful for list views.
+**Action:** Use `select` to fetch only necessary fields and use `Prisma.ModelGetPayload` to define strict types for the selected data.
