@@ -39,8 +39,8 @@ const baseJobSchema = z.object({
   workArrangement: WorkArrangementEnum,
   location: z.string().min(2, { message: "Location is required" }),
 
-  salaryMin: z.coerce.number().int().nonnegative().optional(),
-  salaryMax: z.coerce.number().int().nonnegative().optional(),
+  salaryMin: z.coerce.number<number>().int().nonnegative().optional(),
+  salaryMax: z.coerce.number<number>().int().nonnegative().optional(),
 
   benefits: z.array(z.string()).optional(),
   qualifications: z.array(z.string()).optional(),
