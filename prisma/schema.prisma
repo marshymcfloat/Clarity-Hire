@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
 }
 
 model Account {
@@ -28,21 +30,25 @@ model Account {
 }
 
 model Application {
-  id                String              @id @default(cuid())
-  userId            String
-  jobId             String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  status            ApplicationStatus   @default(SUBMITTED)
-  resumeId          String
-  attachmentUrls    String[]            @default([])
-  coverLetter       String?
-  Job               Job                 @relation(fields: [jobId], references: [id])
-  Resume            Resume              @relation(fields: [resumeId], references: [id])
-  User              User                @relation(fields: [userId], references: [id])
-  ApplicationAnswer ApplicationAnswer[]
+  id                  String              @id @default(cuid())
+  userId              String
+  jobId               String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  status              ApplicationStatus   @default(SUBMITTED)
+  resumeId            String
+  attachmentUrls      String[]            @default([])
+  coverLetter         String?
+  processedForRAG     Boolean             @default(false)
+  ragProcessedAt      DateTime?
+  ragProcessingFailed Boolean             @default(false)
+  Job                 Job                 @relation(fields: [jobId], references: [id])
+  Resume              Resume              @relation(fields: [resumeId], references: [id])
+  User                User                @relation(fields: [userId], references: [id])
+  ApplicationAnswer   ApplicationAnswer[]
 
   @@unique([userId, jobId])
+  @@index([processedForRAG])
 }
 
 model ApplicationAnswer {
@@ -57,24 +63,28 @@ model ApplicationAnswer {
 }
 
 model Company {
-  id               String          @id @default(cuid())
-  name             String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  coverImage       String?
-  description      String
-  image            String?
-  location         String
-  slug             String          @unique
-  websiteUrl       String?
-  ownerId          String          @unique
-  plan             String          @default("free")
-  stripeCustomerId String?         @unique
-  companySize      CompanySize?
-  User             User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  CompanyMember    CompanyMember[]
-  Job              Job[]
-  Question         Question[]
+  id                  String                 @id @default(cuid())
+  name                String
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  coverImage          String?
+  description         String
+  image               String?
+  location            String
+  slug                String                 @unique
+  websiteUrl          String?
+  ownerId             String                 @unique
+  plan                String                 @default("free")
+  stripeCustomerId    String?                @unique
+  companySize         CompanySize?
+  ragQuotaUsed        Int                    @default(0)
+  ragCostMtd          Float                  @default(0)
+  User                User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  CompanyMember       CompanyMember[]
+  Job                 Job[]
+  Question            Question[]
+  CandidateAccessLog  CandidateAccessLog[]
+  RAGMetrics          RAGMetrics[]
 }
 
 model CompanyMember {
@@ -93,29 +103,31 @@ model CompanyMember {
 }
 
 model Job {
-  id               String          @id @default(cuid())
-  title            String
-  companyId        String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  department       String
-  experienceLevel  ExperienceLevel
-  jobType          JobType
-  location         String
-  salaryMax        Int?
-  salaryMin        Int?
-  benefits         String[]
-  qualifications   String[]
-  responsibilities String[]
-  skills           String[]
-  workArrangement  WorkArrangement @default(ON_SITE)
-  workSchedule     String?
-  summary          String
-  status           JobStatus       @default(DRAFT)
-  Application      Application[]
-  Company          Company         @relation(fields: [companyId], references: [id])
-  QuestionOnJob    QuestionOnJob[]
-  SavedJob         SavedJob[]
+  id                String               @id @default(cuid())
+  title             String
+  companyId         String
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  department        String
+  experienceLevel   ExperienceLevel
+  jobType           JobType
+  location          String
+  salaryMax         Int?
+  salaryMin         Int?
+  benefits          String[]
+  qualifications    String[]
+  responsibilities  String[]
+  skills            String[]
+  workArrangement   WorkArrangement      @default(ON_SITE)
+  workSchedule      String?
+  summary           String
+  status            JobStatus            @default(DRAFT)
+  jobEmbeddingId    String?              @unique
+  Application       Application[]
+  Company           Company              @relation(fields: [companyId], references: [id])
+  QuestionOnJob     QuestionOnJob[]
+  SavedJob          SavedJob[]
+  CandidateJobMatch CandidateJobMatch[]
 }
 
 
@@ -150,14 +162,17 @@ model QuestionOnJob {
 }
 
 model Resume {
-  id          String        @id @default(cuid())  
-  name        String
-  userId      String
-  url         String
-  createdAt   DateTime      @default(now())
-  deletedAt   DateTime?     @updatedAt
-  Application Application[]
-  User        User          @relation(fields: [userId], references: [id])
+  id             String          @id @default(cuid())  
+  name           String
+  userId         String
+  url            String
+  createdAt      DateTime        @default(now())
+  deletedAt      DateTime?       @updatedAt
+  fileType       String          @default("pdf")
+  fileSizeBytes  Int?
+  Application    Application[]
+  User           User            @relation(fields: [userId], references: [id])
+  ParsedDocument ParsedDocument?
 }
 
 model SavedJob {
@@ -173,22 +188,122 @@ model SavedJob {
   @@index([jobId])
 }
 
+// ============================================================
+// RAG Models
+// ============================================================
+
+model ParsedDocument {
+  id            String          @id @default(cuid())
+  resumeId      String          @unique
+  rawText       String          @db.Text
+  textHash      String          @unique
+  metadata      Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  Resume        Resume          @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  DocumentChunk DocumentChunk[]
+
+  @@index([textHash])
+}
+
+model DocumentChunk {
+  id             String         @id @default(cuid())
+  parsedDocId    String
+  position       Int
+  chunkIndex     Int
+  chunkText      String         @db.Text
+  sectionType    String?
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  ParsedDocument ParsedDocument @relation(fields: [parsedDocId], references: [id], onDelete: Cascade)
+  Embedding      Embedding?
+
+  @@index([parsedDocId, chunkIndex])
+  @@index([parsedDocId])
+}
+
+model Embedding {
+  id             String        @id @default(cuid())
+  chunkId        String        @unique
+  vector         Unsupported("vector(768)") // pgvector type for 768-dimensional embeddings
+  contentHash    String
+  modelVersionId String
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  DocumentChunk  DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@index([contentHash, modelVersionId])
+}
+
+model CandidateJobMatch {
+  id             String   @id @default(cuid())
+  candidateId    String
+  jobId          String
+  matchScore     Int
+  fitSummary     String?  @db.Text
+  pros           String[]
+  cons           String[]
+  missingReqs    String[]
+  evidence       Json?
+  interviewKit   Json?
+  scoredAt       DateTime @default(now())
+  expiresAt      DateTime?
+  isSaved        Boolean  @default(false)
+  scoringVersion String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Candidate      User     @relation("CandidateJobMatch", fields: [candidateId], references: [id])
+  Job            Job      @relation(fields: [jobId], references: [id])
+
+  @@unique([candidateId, jobId])
+  @@index([jobId, matchScore])
+}
+
+model CandidateAccessLog {
+  id           String       @id @default(cuid())
+  accessorId   String
+  candidateId  String?
+  actionType   AccessAction
+  resourceType String
+  resourceId   String
+  companyId    String?
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+  Accessor     User         @relation("Accessor", fields: [accessorId], references: [id])
+  Candidate    User?        @relation("CandidateAccessLog", fields: [candidateId], references: [id])
+  Company      Company?     @relation(fields: [companyId], references: [id])
+}
+
+model RAGMetrics {
+  id          String     @id @default(cuid())
+  companyId   String?
+  metricType  MetricType
+  metricValue Float
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  Company     Company?   @relation(fields: [companyId], references: [id])
+}
+
 model User {
-  id             String          @id @default(cuid())
-  email          String          @unique
-  name           String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  username       String?         @unique
-  image          String?
-  emailVerified  DateTime?
-  hashedPassword String?
-  Account        Account[]
-  Application    Application[]
-  Company        Company?
-  CompanyMember  CompanyMember[]
-  Resume         Resume[]
-  SavedJob       SavedJob[]
+  id                   String                 @id @default(cuid())
+  email                String                 @unique
+  name                 String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  username             String?                @unique
+  image                String?
+  emailVerified        DateTime?
+  hashedPassword       String?
+  Account              Account[]
+  Application          Application[]
+  Company              Company?
+  CompanyMember        CompanyMember[]
+  Resume               Resume[]
+  SavedJob             SavedJob[]
+  CandidateJobMatch    CandidateJobMatch[]    @relation("CandidateJobMatch")
+  AccessorLogs         CandidateAccessLog[]   @relation("Accessor")
+  CandidateAccessLog   CandidateAccessLog[]   @relation("CandidateAccessLog")
 }
 
 enum ApplicationStatus {
@@ -251,4 +366,26 @@ enum WorkArrangement {
   ON_SITE
   HYBRID
   REMOTE
+}
+
+enum AccessAction {
+  SEARCH
+  VIEW_RESUME
+  DOWNLOAD_RESUME
+  VIEW_APPLICATION
+  VIEW_PROFILE
+  GENERATE_MATCH_REPORT
+  SHORTLIST
+  REJECT
+  INTERVIEW
+}
+
+enum MetricType {
+  EMBEDDING_GENERATION_COST_USD
+  LLM_GENERATION_COST_USD
+  VECTOR_DB_COST_USD
+  LATENCY_SEMANTIC_SEARCH_MS
+  LATENCY_MATCH_GENERATION_MS
+  LLM_TOKENS_INPUT
+  LLM_TOKENS_OUTPUT
 }

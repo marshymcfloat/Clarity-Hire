@@ -6,14 +6,12 @@ import React from "react";
 
 const CompanyLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <NextSessionProvider>
       <SidebarProvider>
         <div className="flex w-full h-screen overflow-hidden bg-white">
           <AppSidebar />
           <MainContent>{children}</MainContent>
         </div>
       </SidebarProvider>
-    </NextSessionProvider>
   );
 };
 

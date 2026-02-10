@@ -58,6 +58,9 @@ export async function SubmitApplicationAction(formData: FormData) {
       const { url, name } = await uploadResumeToBlobStore(newResumeFile);
       uploadedBlobUrls.push(url); // Track for cleanup
 
+      // Determine file type
+      const fileType = newResumeFile.name.endsWith(".docx") ? "docx" : "pdf";
+
       // Check for existing resume with same name for this user
       const existingResume = await prisma.resume.findFirst({
         where: {
@@ -70,15 +73,45 @@ export async function SubmitApplicationAction(formData: FormData) {
         // Update existing resume
         const updatedResume = await prisma.resume.update({
           where: { id: existingResume.id },
-          data: { url },
+          data: {
+            url,
+            fileType,
+            fileSizeBytes: newResumeFile.size,
+          },
         });
         finalResumeId = updatedResume.id;
       } else {
         // Create new resume
         const newResume = await prisma.resume.create({
-          data: { userId, url, name },
+          data: {
+            userId,
+            url,
+            name,
+            fileType,
+            fileSizeBytes: newResumeFile.size,
+          },
         });
         finalResumeId = newResume.id;
+      }
+
+      // Trigger RAG pipeline (await to ensure it's enqueued)
+      try {
+        const { resumeQueue } = await import("../queue/queues");
+        await resumeQueue.add(
+          "parse",
+          {
+            resumeId: finalResumeId,
+            resumeUrl: url,
+            fileType,
+          },
+          { jobId: `parse-${finalResumeId}-${Date.now()}` }, // Add request timestamp to allow re-processing if needed
+        );
+        console.log(
+          `[SubmitApplication] Enqueued parsing job for resume: ${finalResumeId}`,
+        );
+      } catch (err) {
+        console.error("Failed to enqueue resume parsing:", err);
+        // Don't fail the application, just log the error. RAG can be triggered manually later if needed.
       }
     } else if (typeof existingResumeId === "string") {
       const resume = await prisma.resume.findFirst({
@@ -86,6 +119,28 @@ export async function SubmitApplicationAction(formData: FormData) {
       });
       if (!resume) return { success: false, error: "Invalid resume selected." };
       finalResumeId = resume.id;
+
+      // Trigger RAG pipeline for existing resume as well (coverage)
+      try {
+        const { resumeQueue } = await import("../queue/queues");
+        await resumeQueue.add(
+          "parse",
+          {
+            resumeId: finalResumeId,
+            resumeUrl: resume.url,
+            fileType: resume.fileType,
+          },
+          { jobId: `parse-${finalResumeId}-${Date.now()}` },
+        );
+        console.log(
+          `[SubmitApplication] Enqueued parsing job for existing resume: ${finalResumeId}`,
+        );
+      } catch (err) {
+        console.error(
+          "Failed to enqueue resume parsing for existing resume:",
+          err,
+        );
+      }
     } else {
       return { success: false, error: "A resume is required." };
     }

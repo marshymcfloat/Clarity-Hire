@@ -5,6 +5,7 @@ import TanstackProvider from "@/components/providers/TanstackProvider";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import TopLoaderWrapper from "@/components/ui/TopLoaderWrapper";
 import "nprogress/nprogress.css";
+import NextSessionProvider from "@/components/providers/NextSessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,14 +45,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://clarityhire.com",
+    url: "https://clarityhire.online",
     title: "ClarityHire | Modern Job Board",
     description:
       "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
     siteName: "ClarityHire",
     images: [
       {
-        url: "/og-image.jpg", // Ensure this exists or replace with a valid URL
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "ClarityHire",
@@ -81,12 +82,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased ${inter.className}`}
       >
-        <ReduxProvider>
-          <TanstackProvider>
-            <TopLoaderWrapper />
-            {children}
-          </TanstackProvider>
-        </ReduxProvider>
+        <NextSessionProvider>
+          <ReduxProvider>
+            <TanstackProvider>
+              <TopLoaderWrapper />
+              {children}
+            </TanstackProvider>
+          </ReduxProvider>
+        </NextSessionProvider>
       </body>
     </html>
   );

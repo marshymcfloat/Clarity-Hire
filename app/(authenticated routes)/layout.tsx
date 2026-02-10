@@ -6,14 +6,12 @@ import React from "react";
 
 const CompanyLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <NextSessionProvider>
-      <SidebarProvider>
-        <div className="flex w-screen h-screen">
-          <AppSidebar />
-          <MainContent>{children}</MainContent>
-        </div>
-      </SidebarProvider>
-    </NextSessionProvider>
+    <SidebarProvider>
+      <div className="flex w-screen h-screen">
+        <AppSidebar />
+        <MainContent>{children}</MainContent>
+      </div>
+    </SidebarProvider>
   );
 };
 
