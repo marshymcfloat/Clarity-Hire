@@ -1,53 +1,112 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+const RECRUITER_ROUTE_PATTERN =
+  /^\/([^/]+)\/([^/]+)\/(dashboard|manage-jobs|manage-applicants)(?:\/|$)/;
+const APPLICANT_ROUTE_PATTERN =
+  /^\/([^/]+)\/(saved-jobs|job-applications)(?:\/|$)/;
+const CANDIDATE_ROUTE_PATTERN = /^\/candidates(?:\/|$)/;
+const PLATFORM_ADMIN_ROUTE_PATTERN = /^\/admin(?:\/|$)/;
+
+function redirectToSignIn(req: NextRequest) {
+  const signInUrl = new URL("/api/auth/signin", req.url);
+  signInUrl.searchParams.set(
+    "callbackUrl",
+    `${req.nextUrl.pathname}${req.nextUrl.search}`,
+  );
+  return NextResponse.redirect(signInUrl);
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const isAuthenticated = Boolean(token?.id);
+  const isRecruiter = token?.isRecruiter === true;
+  const isPlatformAdmin = token?.isPlatformAdmin === true;
+  const activeCompanySlug =
+    typeof token?.activeCompanySlug === "string" ? token.activeCompanySlug : "";
+  const memberId = typeof token?.memberId === "string" ? token.memberId : "";
 
-  // 1. If the user is not a logged-in recruiter, do nothing.
-  // Let the page-level logic handle authorization.
-  if (!token || !token.isRecruiter) {
+  const recruiterRouteMatch = pathname.match(RECRUITER_ROUTE_PATTERN);
+  const applicantRouteMatch = pathname.match(APPLICANT_ROUTE_PATTERN);
+  const isCandidatesRoute = CANDIDATE_ROUTE_PATTERN.test(pathname);
+  const isPlatformAdminRoute = PLATFORM_ADMIN_ROUTE_PATTERN.test(pathname);
+
+  if (isPlatformAdminRoute) {
+    if (!isAuthenticated) {
+      return redirectToSignIn(req);
+    }
+
+    if (!isPlatformAdmin) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
     return NextResponse.next();
   }
 
-  const userId = token.id as string;
-  const companyId = token.activeCompanyId as string;
+  // Recruiter-only route protection.
+  if (recruiterRouteMatch || isCandidatesRoute) {
+    if (!isAuthenticated) {
+      return redirectToSignIn(req);
+    }
 
-  // 2. If token is incomplete, do nothing and let the user get logged out or handled by the app.
-  if (!userId || !companyId) {
-    console.error("Recruiter token is missing userId or activeCompanyId.");
+    if (!isRecruiter) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
+    if (recruiterRouteMatch) {
+      if (!activeCompanySlug || !memberId) {
+        return redirectToSignIn(req);
+      }
+
+      const [, routeCompanySlug, routeMemberId, section] = recruiterRouteMatch;
+
+      if (
+        routeCompanySlug !== activeCompanySlug ||
+        routeMemberId !== memberId
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${activeCompanySlug}/${memberId}/${section}`, req.url),
+        );
+      }
+    }
+
     return NextResponse.next();
   }
 
-  // Prisma Client cannot run in Edge Middleware.
-  // We should rely on standard redirection or handle this logic in a Server Component layout.
-
-  // Redirect recruiters to their dashboard if they are on a generic page
-  // console.log("Middleware Token:", {
-  //   isRecruiter: token?.isRecruiter,
-  //   slug: token?.activeCompanySlug,
-  //   memberId: token?.memberId,
-  //   path: pathname
-  // });
-
-  if (token.isRecruiter && token.activeCompanySlug && token.memberId) {
-    const recruiterBasePath = `/${token.activeCompanySlug}/${token.memberId}`;
-
-    // Allow access if already on the recruiter's specific path
-    if (pathname.startsWith(recruiterBasePath)) {
-      return NextResponse.next();
+  // Applicant-only routes require authentication.
+  if (applicantRouteMatch) {
+    if (!isAuthenticated) {
+      return redirectToSignIn(req);
     }
 
-    // Redirect to dashboard if on strictly root or other generic landing/auth pages
-    if (
-      pathname === "/" ||
-      pathname === "/companies" ||
-      pathname === "/api/auth/signin"
-    ) {
-      const redirectUrl = new URL(`${recruiterBasePath}/dashboard`, req.url);
-      return NextResponse.redirect(redirectUrl);
+    // Recruiters should stay in recruiter workspaces.
+    if (isRecruiter && activeCompanySlug && memberId) {
+      return NextResponse.redirect(
+        new URL(`/${activeCompanySlug}/${memberId}/dashboard`, req.url),
+      );
     }
+
+    return NextResponse.next();
+  }
+
+  // Convenience: recruiters on generic pages go to their dashboard.
+  if (
+    isPlatformAdmin &&
+    (pathname === "/" || pathname === "/companies")
+  ) {
+    return NextResponse.redirect(new URL("/admin/companies", req.url));
+  }
+
+  if (
+    isRecruiter &&
+    activeCompanySlug &&
+    memberId &&
+    (pathname === "/" || pathname === "/companies")
+  ) {
+    return NextResponse.redirect(
+      new URL(`/${activeCompanySlug}/${memberId}/dashboard`, req.url),
+    );
   }
 
   return NextResponse.next();

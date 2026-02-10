@@ -10,11 +10,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { prisma } from "@/prisma/prisma";
 import { revalidatePath } from "next/cache";
+import { JobStatus } from "@/lib/generated/prisma/client";
 import {
   checkRateLimit,
   verifyCompanyAccess,
   JOB_MANAGEMENT_ROLES,
 } from "../security";
+import { requireRecruiterAccess } from "../server-auth";
 
 export type GenerateSummaryPayload = {
   jobTitle: string;
@@ -36,18 +38,46 @@ export type GenerateListPayload = {
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+const RECRUITER_ALLOWED_JOB_STATUSES: JobStatus[] = [
+  "DRAFT",
+  "PENDING_REVIEW",
+  "ARCHIVED",
+];
+
+function normalizeRecruiterStatus(status?: JobStatus): JobStatus {
+  if (!status) {
+    return "DRAFT";
+  }
+
+  if (RECRUITER_ALLOWED_JOB_STATUSES.includes(status)) {
+    return status;
+  }
+
+  // Recruiters are not allowed to directly set publish outcomes.
+  if (status === "PUBLISHED") {
+    return "PENDING_REVIEW";
+  }
+
+  return "DRAFT";
+}
+
 export async function generateJobDescriptionField(
   payload: GenerateSummaryPayload,
 ) {
-  const session = await getServerSession(authOptions);
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
 
-  // 1. Auth Check (Basic) - Rate limiting is tied to user ID
-  if (!session?.user?.id) {
-    return { success: false, error: "Unauthorized" };
+  if (!auth.authorized) {
+    return { success: false, error: auth.error };
   }
 
   // 2. Rate Limiting (Phase 1 Security)
-  const isAllowed = checkRateLimit(`ai-gen-${session.user.id}`, 5, 60); // 5 request per minute
+  const isAllowed = checkRateLimit(
+    `ai-gen-${auth.access.companyId}-${auth.userId}`,
+    5,
+    60,
+  ); // 5 requests per minute
   if (!isAllowed) {
     return {
       success: false,
@@ -102,15 +132,20 @@ export async function generateJobDescriptionField(
 }
 
 export async function generateJobDescriptionList(payload: GenerateListPayload) {
-  const session = await getServerSession(authOptions);
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
 
-  // 1. Auth Check
-  if (!session?.user?.id) {
-    return { success: false, error: "Unauthorized" };
+  if (!auth.authorized) {
+    return { success: false, error: auth.error };
   }
 
   // 2. Rate Limiting
-  const isAllowed = checkRateLimit(`ai-gen-list-${session.user.id}`, 5, 60);
+  const isAllowed = checkRateLimit(
+    `ai-gen-list-${auth.access.companyId}-${auth.userId}`,
+    5,
+    60,
+  );
   if (!isAllowed) {
     return {
       success: false,
@@ -217,14 +252,21 @@ export async function createJobAction(values: createJobActionPayload) {
     if (!accessCheck.authorized || !accessCheck.company) {
       return { success: false, error: accessCheck.error || "Access Denied" };
     }
+    if (accessCheck.company.suspendedAt) {
+      return {
+        success: false,
+        error: "Company is suspended and cannot create job postings.",
+      };
+    }
 
     const { questions, ...jobData } = validationResult.data;
+    const status = normalizeRecruiterStatus(validationResult.data.status);
 
     await prisma.$transaction(async (tx) => {
       const createdJob = await tx.job.create({
         data: {
           ...jobData,
-          status: "PUBLISHED",
+          status,
           Company: {
             connect: {
               id: accessCheck.company.id, // Use verified ID from DB
@@ -289,8 +331,18 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
     if (!accessCheck.authorized) {
       return { success: false, error: accessCheck.error || "Access Denied" };
     }
+    if (accessCheck.company?.suspendedAt) {
+      return {
+        success: false,
+        error: "Company is suspended and cannot manage job postings.",
+      };
+    }
 
     const { questions, ...jobData } = validationResult.data;
+    const normalizedStatus =
+      payload.values.status != null
+        ? normalizeRecruiterStatus(payload.values.status)
+        : undefined;
 
     await prisma.$transaction(async (tx) => {
       // Ensure the job actually belongs to the company we authorized
@@ -306,7 +358,10 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
       }
 
       await tx.job.update({
-        data: { ...jobData },
+        data: {
+          ...jobData,
+          ...(normalizedStatus != null ? { status: normalizedStatus } : {}),
+        },
         where: { id: payload.id },
       });
 
@@ -343,6 +398,67 @@ export async function updateJobAction(payload: UpdateJobActionPayload) {
       };
     }
     console.error("Unexpected error:", err);
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+type SubmitJobForReviewPayload = {
+  id: string;
+  companySlug: string;
+  memberId: string;
+};
+
+export async function submitJobForReviewAction(
+  payload: SubmitJobForReviewPayload,
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return { success: false, error: "Please Login First" };
+    }
+
+    const accessCheck = await verifyCompanyAccess(
+      session.user.id,
+      payload.companySlug,
+      JOB_MANAGEMENT_ROLES,
+    );
+
+    if (!accessCheck.authorized || !accessCheck.company) {
+      return { success: false, error: accessCheck.error || "Access Denied" };
+    }
+    if (accessCheck.company.suspendedAt) {
+      return {
+        success: false,
+        error: "Company is suspended and cannot submit jobs for review.",
+      };
+    }
+
+    const job = await prisma.job.findFirst({
+      where: {
+        id: payload.id,
+        companyId: accessCheck.company.id,
+      },
+      select: { id: true, status: true },
+    });
+
+    if (!job) {
+      return { success: false, error: "Job not found." };
+    }
+
+    if (job.status === "PUBLISHED") {
+      return { success: false, error: "Job is already published." };
+    }
+
+    await prisma.job.update({
+      where: { id: payload.id },
+      data: { status: "PENDING_REVIEW" },
+    });
+
+    revalidatePath(`/${payload.companySlug}/${payload.memberId}/manage-jobs`);
+    return { success: true, message: "Job submitted for admin review." };
+  } catch (err) {
+    console.error("Unexpected error in submitJobForReviewAction:", err);
     return { success: false, error: "An unexpected error occurred." };
   }
 }

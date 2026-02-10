@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 
-import { CompanyMember, TeamRole } from "./generated/prisma/client";
+import { CompanyMember, TeamRole, UserRole } from "./generated/prisma/client";
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -130,25 +130,39 @@ export const authOptions: AuthOptions = {
 
         if (dbUserWithMembership) {
           token.id = dbUserWithMembership.id;
+          token.role = dbUserWithMembership.role;
 
           const recruiterRoles: TeamRole[] = [
             TeamRole.ADMIN,
             TeamRole.RECRUITER,
             TeamRole.HIRING_MANAGER,
           ];
+          const platformAdminRoles: UserRole[] = [
+            UserRole.PLATFORM_ADMIN,
+            UserRole.OPS_REVIEWER,
+          ];
 
           const isRecruiter = dbUserWithMembership.CompanyMember.some(
             (membership: CompanyMember) =>
               recruiterRoles.includes(membership.role),
           );
+          const isPlatformAdmin = platformAdminRoles.includes(
+            dbUserWithMembership.role,
+          );
 
           token.isRecruiter = isRecruiter;
+          token.isPlatformAdmin = isPlatformAdmin;
           if (dbUserWithMembership.CompanyMember.length > 0) {
             const membership = dbUserWithMembership.CompanyMember[0];
             token.activeCompanyId = membership.companyId;
             token.activeCompanyRole = membership.role;
             token.activeCompanySlug = membership.Company.slug;
             token.memberId = membership.id;
+          } else {
+            token.activeCompanyId = undefined;
+            token.activeCompanyRole = undefined;
+            token.activeCompanySlug = undefined;
+            token.memberId = undefined;
           }
         }
       }
@@ -160,9 +174,11 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id;
         session.user.activeCompanyId = token.activeCompanyId;
         session.user.activeCompanyRole = token.activeCompanyRole;
-        session.user.isRecruiter = token.isRecruiter;
+        session.user.isRecruiter = token.isRecruiter === true;
         session.user.memberId = token.memberId;
         session.user.activeCompanySlug = token.activeCompanySlug;
+        session.user.role = token.role ?? UserRole.USER;
+        session.user.isPlatformAdmin = token.isPlatformAdmin === true;
       }
       return session;
     },

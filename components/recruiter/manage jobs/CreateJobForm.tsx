@@ -64,6 +64,11 @@ const CreateJobForm = ({
   onSuccess: () => void;
   initialData?: Job & { QuestionOnJob: QuestionOnJob[] };
 }) => {
+  const recruiterStatusOptions: JobStatus[] = [
+    "DRAFT",
+    "PENDING_REVIEW",
+    "ARCHIVED",
+  ];
   const [isSubmitting, startTransition] = useTransition();
   const [isGenerating, setIsGenerating] = useState({
     summary: false,
@@ -548,9 +553,9 @@ const CreateJobForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Object.keys(JOB_STATUS_MAP).map((key) => (
+                    {recruiterStatusOptions.map((key) => (
                       <SelectItem key={key} value={key}>
-                        {JOB_STATUS_MAP[key as JobStatus]}
+                        {JOB_STATUS_MAP[key]}
                       </SelectItem>
                     ))}
                   </SelectContent>

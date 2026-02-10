@@ -1,8 +1,7 @@
 // next-auth.d.ts
 
-import { TeamRole } from "@/lib/generated/prisma/client";
+import { TeamRole, UserRole } from "@/lib/generated/prisma/client";
 import { DefaultSession } from "next-auth";
-import { JWT } from "next-auth/jwt";
 
 /**
  * This module declaration extends the built-in NextAuth types.
@@ -15,20 +14,24 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      activeCompanyId: string;
-      activeCompanySlug: string;
-      activeCompanyRole: TeamRole;
+      activeCompanyId?: string;
+      activeCompanySlug?: string;
+      activeCompanyRole?: TeamRole;
       isRecruiter: boolean;
-      memberId: string;
+      memberId?: string;
+      role: UserRole;
+      isPlatformAdmin: boolean;
     } & DefaultSession["user"];
   }
 
   interface User {
-    activeCompanyId: string;
-    activeCompanySlug: string;
-    activeCompanyRole: TeamRole;
+    activeCompanyId?: string;
+    activeCompanySlug?: string;
+    activeCompanyRole?: TeamRole;
     isRecruiter: boolean;
-    memberId: string;
+    memberId?: string;
+    role: UserRole;
+    isPlatformAdmin: boolean;
   }
 }
 
@@ -38,10 +41,12 @@ declare module "next-auth/jwt" {
    */
   interface JWT {
     id: string;
-    activeCompanyId: string;
-    activeCompanySlug: string;
-    activeCompanyRole: TeamRole;
+    activeCompanyId?: string;
+    activeCompanySlug?: string;
+    activeCompanyRole?: TeamRole;
     isRecruiter: boolean;
-    memberId: string;
+    memberId?: string;
+    role: UserRole;
+    isPlatformAdmin: boolean;
   }
 }

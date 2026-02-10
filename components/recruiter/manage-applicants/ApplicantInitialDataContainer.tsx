@@ -1,22 +1,24 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/prisma/prisma";
-import { getServerSession } from "next-auth";
 import React from "react";
 import ApplicantDataTable from "./ApplicantDataTable";
 import { applicantColumns, Applicant } from "./ApplicantColumns";
+import { JOB_MANAGEMENT_ROLES } from "@/lib/security";
+import { requireRecruiterAccess } from "@/lib/server-auth";
 
 const ApplicantInitialDataContainer = async () => {
-  const session = await getServerSession(authOptions);
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
 
-  if (!session?.user?.activeCompanyId) return null;
+  if (!auth.authorized) return null;
 
   const applications = (await prisma.application.findMany({
     where: {
-      Job: { companyId: session.user.activeCompanyId },
+      Job: { companyId: auth.access.companyId },
     },
     include: {
       Job: { select: { title: true, id: true } },
-      User: { select: { name: true, email: true, image: true } },
+      User: { select: { id: true, name: true, email: true, image: true } },
       Resume: { select: { url: true, name: true } },
     },
     orderBy: { createdAt: "desc" },

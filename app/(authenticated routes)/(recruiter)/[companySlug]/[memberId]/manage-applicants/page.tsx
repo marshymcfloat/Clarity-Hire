@@ -1,6 +1,9 @@
 import React, { Suspense } from "react";
 import ManageApplicantsSkeleton from "@/components/recruiter/manage-applicants/ManageApplicantsSkeleton";
 import ApplicantInitialDataContainer from "@/components/recruiter/manage-applicants/ApplicantInitialDataContainer";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 
 const ManageApplicantsPage = () => {
   return (
@@ -13,6 +16,14 @@ const ManageApplicantsPage = () => {
         <p className="text-sm text-muted-foreground">
           View and manage candidates across all your jobs.
         </p>
+        <div>
+          <Button asChild variant="outline" size="sm" className="mt-1">
+            <Link href="/candidates/search">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Open Candidate Search
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Suspense fallback={<ManageApplicantsSkeleton />}>

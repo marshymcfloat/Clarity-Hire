@@ -1,6 +1,18 @@
 import { z } from "zod";
 import { passwordSchema } from "../common";
 
+const DISALLOWED_PUBLIC_EMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "icloud.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "gmx.com",
+]);
+
 export const authLoginSchema = z.object({
   email: z
     .email({ message: "Please make sure to pass a valid email" })
@@ -49,6 +61,16 @@ export const companyCreationStageOneSchema = z
         code: "custom",
         message: "Password dont match",
         path: ["confirmPassword"],
+      });
+    }
+
+    const domain = data.workEmail.split("@")[1]?.toLowerCase();
+    if (!domain || DISALLOWED_PUBLIC_EMAIL_DOMAINS.has(domain)) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Please use a company domain email address (public email domains are not allowed).",
+        path: ["workEmail"],
       });
     }
   });

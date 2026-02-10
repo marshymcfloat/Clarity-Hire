@@ -10,7 +10,13 @@ export const ExperienceLevelEnum = z.enum([
   "PRINCIPAL",
 ]);
 
-export const JobStatusEnum = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const JobStatusEnum = z.enum([
+  "DRAFT",
+  "PENDING_REVIEW",
+  "PUBLISHED",
+  "REJECTED",
+  "ARCHIVED",
+]);
 
 export const JobTypeEnum = z.enum([
   "FULL_TIME",
@@ -60,7 +66,7 @@ const baseJobSchema = z.object({
 
 export const createJobSchema = baseJobSchema.refine(
   (data) => {
-    if (data.salaryMin && data.salaryMax) {
+    if (data.salaryMin != null && data.salaryMax != null) {
       return data.salaryMin <= data.salaryMax;
     }
     return true;
@@ -73,7 +79,7 @@ export const createJobSchema = baseJobSchema.refine(
 
 export const updateJobSchema = baseJobSchema.partial().refine(
   (data) => {
-    if (data.salaryMin && data.salaryMax) {
+    if (data.salaryMin != null && data.salaryMax != null) {
       return data.salaryMin <= data.salaryMax;
     }
     return true;

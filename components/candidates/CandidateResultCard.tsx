@@ -5,12 +5,8 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Briefcase, MapPin, FileText, ChevronRight } from "lucide-react";
+import { Briefcase, MapPin, FileText, ChevronRight, Mail } from "lucide-react";
 
 // Helper for match score color
 const getScoreColor = (score: number) => {
@@ -67,6 +63,10 @@ export function CandidateResultCard({
                 </div>
               )}
               <div className="flex items-center gap-1">
+                <Mail className="w-3.5 h-3.5" />
+                {candidate.email}
+              </div>
+              <div className="flex items-center gap-1">
                 <Briefcase className="w-3.5 h-3.5" />
                 Experience info... {/* Placeholder if we had it */}
                 Candidate
@@ -107,21 +107,33 @@ export function CandidateResultCard({
               View Analysis
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full md:w-auto"
-              asChild
-            >
-              <a
-                href={candidate.resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            {candidate.resumeUrl ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full md:w-auto"
+                asChild
+              >
+                <a
+                  href={candidate.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Resume
+                </a>
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full md:w-auto"
+                disabled
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Resume
-              </a>
-            </Button>
+                Resume Unavailable
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

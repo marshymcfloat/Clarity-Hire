@@ -1,14 +1,17 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/prisma/prisma";
-import { getServerSession } from "next-auth";
 import StatsOverview from "./StatsOverview";
 import RecentActivityFeed from "./RecentActivityFeed";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { JOB_MANAGEMENT_ROLES } from "@/lib/security";
+import { requireRecruiterAccess } from "@/lib/server-auth";
 
 const StatCardInitialDataContainer = async () => {
-  const session = await getServerSession(authOptions);
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
 
-  if (!session?.user?.activeCompanyId) return null;
+  if (!auth.authorized) return null;
+
   type ApplicationWithDetails = Prisma.ApplicationGetPayload<{
     include: {
       Job: true;
@@ -18,7 +21,7 @@ const StatCardInitialDataContainer = async () => {
 
   const recentApplications: ApplicationWithDetails[] =
     (await prisma.application.findMany({
-      where: { Job: { companyId: session.user.activeCompanyId } },
+      where: { Job: { companyId: auth.access.companyId } },
       include: {
         Job: true,
         User: true,
@@ -30,20 +33,20 @@ const StatCardInitialDataContainer = async () => {
   const [activeJobs, totalApplicants, totalHired, activeInterviews] =
     await Promise.all([
       prisma.job.count({
-        where: { companyId: session.user.activeCompanyId, status: "PUBLISHED" },
+        where: { companyId: auth.access.companyId, status: "PUBLISHED" },
       }),
       prisma.application.count({
-        where: { Job: { companyId: session.user.activeCompanyId } },
+        where: { Job: { companyId: auth.access.companyId } },
       }),
       prisma.application.count({
         where: {
-          Job: { companyId: session.user.activeCompanyId },
+          Job: { companyId: auth.access.companyId },
           status: "HIRED",
         },
       }),
       prisma.application.count({
         where: {
-          Job: { companyId: session.user.activeCompanyId },
+          Job: { companyId: auth.access.companyId },
           status: "INTERVIEWING",
         },
       }),

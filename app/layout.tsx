@@ -6,6 +6,7 @@ import ReduxProvider from "@/components/providers/ReduxProvider";
 import TopLoaderWrapper from "@/components/ui/TopLoaderWrapper";
 import "nprogress/nprogress.css";
 import NextSessionProvider from "@/components/providers/NextSessionProvider";
+import { absoluteUrl, siteConfig } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,30 +26,32 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.clarityhire.online"),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "ClarityHire | Modern Job Board",
+    default: "ClarityHire | Hiring OS for Growing Teams",
     template: "%s | ClarityHire",
   },
-  description:
-    "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+  description: siteConfig.description,
   keywords: [
-    "Job Board",
-    "Careers",
-    "Hiring",
-    "Employment",
-    "Tech Jobs",
-    "Remote Jobs",
+    "recruitment software",
+    "ATS",
+    "hiring platform",
+    "applicant tracking",
+    "AI recruiting",
+    "candidate screening",
+    "job board software",
   ],
   authors: [{ name: "ClarityHire Team" }],
   creator: "ClarityHire",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://clarityhire.online",
-    title: "ClarityHire | Modern Job Board",
-    description:
-      "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+    url: absoluteUrl("/"),
+    title: "ClarityHire | Hiring OS for Growing Teams",
+    description: siteConfig.description,
     siteName: "ClarityHire",
     images: [
       {
@@ -61,9 +64,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ClarityHire | Modern Job Board",
-    description:
-      "Find your dream job with ClarityHire. Explore opportunities from top companies with transparency and ease.",
+    title: "ClarityHire | Hiring OS for Growing Teams",
+    description: siteConfig.description,
     images: ["/og-image.jpg"],
   },
   robots: {

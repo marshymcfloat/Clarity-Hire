@@ -1,18 +1,21 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/prisma/prisma";
-import { getServerSession } from "next-auth";
 import React from "react";
 import JobDataTable from "./JobDataTable";
 import { jobColumns } from "./JobsColumn";
 import DashboardHeader from "./DashboardHeader";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { JOB_MANAGEMENT_ROLES } from "@/lib/security";
+import { requireRecruiterAccess } from "@/lib/server-auth";
 
 const ManageJobsInitialDataContainer = async () => {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.activeCompanyId) return null;
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
+
+  if (!auth.authorized) return null;
 
   const jobsWithCounts = (await prisma.job.findMany({
-    where: { companyId: session.user.activeCompanyId },
+    where: { companyId: auth.access.companyId },
     include: {
       QuestionOnJob: true,
       _count: {

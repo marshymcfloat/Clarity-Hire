@@ -67,43 +67,62 @@ export const matchReportSchema = z.object({
 
 export type MatchReportResult = z.infer<typeof matchReportSchema>;
 
+export interface MatchReportOptions {
+  companyId?: string;
+}
+
 /**
  * Generates a match report for a candidate and a job using Gemini.
  * @param candidateId ID of the user (candidate)
  * @param jobId ID of the job
  */
-export async function generateMatchReport(candidateId: string, jobId: string) {
+export async function generateMatchReport(
+  candidateId: string,
+  jobId: string,
+  options: MatchReportOptions = {},
+) {
   try {
-    // 1. Fetch Candidate and Job Data
-    const candidate = await prisma.user.findUnique({
-      where: { id: candidateId },
+    // 1. Fetch validated application context (candidate + job + resume)
+    const application = await prisma.application.findFirst({
+      where: {
+        userId: candidateId,
+        jobId,
+      },
       include: {
+        User: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         Resume: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
           include: {
             ParsedDocument: true,
+          },
+        },
+        Job: {
+          include: {
+            Company: true,
           },
         },
       },
     });
 
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: {
-        Company: true,
-      },
-    });
-
-    if (!candidate || !candidate.Resume?.[0]?.ParsedDocument) {
-      throw new Error("Candidate or valid resume not found");
+    if (!application) {
+      throw new Error("Candidate has not applied to this job");
     }
 
-    if (!job) {
-      throw new Error("Job not found");
+    if (options.companyId && application.Job.companyId !== options.companyId) {
+      throw new Error("Unauthorized access to match report context");
     }
 
-    const resumeText = candidate.Resume[0].ParsedDocument.rawText;
+    if (!application.Resume?.ParsedDocument) {
+      throw new Error("Candidate resume is not processed for analysis yet");
+    }
+
+    const resumeText = application.Resume.ParsedDocument.rawText;
+    const job = application.Job;
     const jobDetails = `
       Title: ${job.title}
       Company: ${job.Company.name}
@@ -195,6 +214,7 @@ export async function generateMatchReport(candidateId: string, jobId: string) {
           candidateId,
           jobId,
           matchId: matchRecord.id,
+          applicationId: application.id,
         },
       },
     });
@@ -215,6 +235,7 @@ export async function generateMatchReport(candidateId: string, jobId: string) {
           metadata: {
             candidateId,
             jobId,
+            applicationId: application.id,
             model: "gemini-2.5-flash",
             inputTokens: promptTokens,
             outputTokens: completionTokens,

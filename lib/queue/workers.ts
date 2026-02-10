@@ -46,6 +46,14 @@ export const resumeWorker = new Worker(
           const { resumeId, resumeUrl, fileType } = data;
           console.log(`[Worker] Parsing resume ${resumeId}...`);
 
+          await prisma.application.updateMany({
+            where: { resumeId },
+            data: {
+              processedForRAG: false,
+              ragProcessingFailed: false,
+            },
+          });
+
           // Parse resume to extract text
           const rawText = await parseResume(resumeUrl, fileType || "pdf");
 
@@ -53,18 +61,39 @@ export const resumeWorker = new Worker(
           const crypto = require("crypto");
           const textHash = crypto
             .createHash("sha256")
-            .update(rawText)
+            .update(`${resumeId}:${rawText}`)
             .digest("hex");
 
-          // Save parsed document
-          const parsedDoc = await prisma.parsedDocument.create({
-            data: {
+          const existingParsedDoc = await prisma.parsedDocument.findUnique({
+            where: { resumeId },
+            select: { id: true },
+          });
+
+          // Re-processing: clear previous chunks/embeddings before writing new text.
+          if (existingParsedDoc) {
+            await prisma.documentChunk.deleteMany({
+              where: { parsedDocId: existingParsedDoc.id },
+            });
+          }
+
+          // Save (or update) parsed document
+          const parsedDoc = await prisma.parsedDocument.upsert({
+            where: { resumeId },
+            update: {
+              rawText,
+              textHash,
+              metadata: {
+                parsedAt: new Date().toISOString(),
+                source: fileType === "docx" ? "mammoth" : "pdf-parse",
+              },
+            },
+            create: {
               resumeId,
               rawText,
               textHash,
               metadata: {
                 parsedAt: new Date().toISOString(),
-                source: "pdf-parse",
+                source: fileType === "docx" ? "mammoth" : "pdf-parse",
               },
             },
           });
@@ -73,7 +102,11 @@ export const resumeWorker = new Worker(
 
           // Enqueue chunking job
           const { resumeQueue } = await import("./queues");
-          await resumeQueue.add("chunk", { parsedDocId: parsedDoc.id });
+          await resumeQueue.add(
+            "chunk",
+            { parsedDocId: parsedDoc.id },
+            { jobId: `chunk-${parsedDoc.id}-${Date.now()}` },
+          );
 
           return { parsedDocId: parsedDoc.id };
         }
@@ -161,6 +194,7 @@ export const resumeWorker = new Worker(
                 where: { resumeId },
                 data: {
                   processedForRAG: true,
+                  ragProcessingFailed: false,
                   ragProcessedAt: new Date(),
                 },
               });
@@ -185,6 +219,36 @@ export const resumeWorker = new Worker(
       }
     } catch (error) {
       console.error(`[Worker] Error processing ${name} job:`, error);
+
+      try {
+        let failedResumeId: string | undefined = data?.resumeId;
+
+        if (!failedResumeId && name === "chunk" && data?.parsedDocId) {
+          const parsed = await prisma.parsedDocument.findUnique({
+            where: { id: data.parsedDocId as string },
+            select: { resumeId: true },
+          });
+          failedResumeId = parsed?.resumeId;
+        }
+
+        if (!failedResumeId && name === "embed" && data?.chunkId) {
+          const chunk = await prisma.documentChunk.findUnique({
+            where: { id: data.chunkId as string },
+            select: { ParsedDocument: { select: { resumeId: true } } },
+          });
+          failedResumeId = chunk?.ParsedDocument.resumeId;
+        }
+
+        if (failedResumeId) {
+          await prisma.application.updateMany({
+            where: { resumeId: failedResumeId },
+            data: { ragProcessingFailed: true },
+          });
+        }
+      } catch (flagError) {
+        console.error("Failed to mark RAG processing failure:", flagError);
+      }
+
       throw error;
     }
   },

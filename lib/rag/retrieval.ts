@@ -30,6 +30,30 @@ export async function semanticSearch(
   // 1. Generate query embedding
   const queryEmbedding = await generateEmbedding(query);
 
+  const paramsArray: any[] = [JSON.stringify(queryEmbedding)];
+  const pushParam = (value: unknown) => {
+    paramsArray.push(value);
+    return `$${paramsArray.length}`;
+  };
+
+  const companyIdParam = pushParam(companyId);
+  const jobFilterClause = jobId ? `AND a."jobId" = ${pushParam(jobId)}` : "";
+
+  // Note: minExperience is currently not reliably derivable from parsed resume text.
+  const locationFilterClause = filters?.location
+    ? `AND dc."chunkText" ILIKE ${pushParam(`%${filters.location.trim()}%`)}`
+    : "";
+
+  const skills = (filters?.skills || []).filter(Boolean);
+  const skillsFilterClause = skills.length
+    ? `AND (${skills
+        .map((skill) => `dc."chunkText" ILIKE ${pushParam(`%${skill}%`)}`)
+        .join(" OR ")})`
+    : "";
+
+  const limitParam = pushParam(limit);
+  const offsetParam = pushParam(offset);
+
   // 2. Build dynamic SQL with pgvector cosine similarity
   // Using cosine distance operator <=> (0 = identical, 2 = opposite)
   // We convert to similarity: 1 - distance
@@ -42,22 +66,25 @@ export async function semanticSearch(
         dc."sectionType",
         1 - (e.vector <=> $1::vector) as similarity,
         pd."resumeId",
+        r.url as resume_url,
         r."userId" as candidate_id,
         u.name as candidate_name,
         u.email as candidate_email,
-        a."createdAt" as applied_at,
-        a."jobId" as application_job_id
+        a."createdAt" as applied_at
       FROM "Embedding" e
       INNER JOIN "DocumentChunk" dc ON e."chunkId" = dc.id
       INNER JOIN "ParsedDocument" pd ON dc."parsedDocId" = pd.id
       INNER JOIN "Resume" r ON pd."resumeId" = r.id
+      INNER JOIN "Application" a ON a."resumeId" = r.id
+      INNER JOIN "Job" j ON j.id = a."jobId" AND j."companyId" = ${companyIdParam}
       INNER JOIN "User" u ON r."userId" = u.id
-      LEFT JOIN "Application" a ON a."resumeId" = r.id ${jobId ? 'AND a."jobId" = $2' : ""}
       WHERE 1=1
-        ${filters?.onlyApplicants ? "AND a.id IS NOT NULL" : ""}
+        ${jobFilterClause}
+        ${locationFilterClause}
+        ${skillsFilterClause}
       ORDER BY similarity DESC
-      LIMIT $${jobId ? 3 : 2}
-      OFFSET $${jobId ? 4 : 3}
+      LIMIT ${limitParam}
+      OFFSET ${offsetParam}
     ),
     grouped_results AS (
       SELECT 
@@ -65,7 +92,8 @@ export async function semanticSearch(
         candidate_name,
         candidate_email,
         "resumeId",
-        applied_at,
+        resume_url,
+        MAX(applied_at) as applied_at,
         AVG(similarity) as avg_similarity,
         jsonb_agg(
           jsonb_build_object(
@@ -78,32 +106,23 @@ export async function semanticSearch(
         ) FILTER (WHERE similarity > 0.7) as relevant_chunks
       FROM ranked_chunks
       GROUP BY candidate_id, candidate_name, candidate_email, 
-               "resumeId", applied_at
+               "resumeId", resume_url
     )
     SELECT * FROM grouped_results
     ORDER BY avg_similarity DESC
-    LIMIT $${jobId ? 3 : 2};
+    LIMIT ${limitParam};
   `;
 
-  // 3. Build parameters array dynamically
-  const params_array: any[] = [JSON.stringify(queryEmbedding)];
-
-  if (jobId) {
-    params_array.push(jobId);
-  }
-
-  params_array.push(limit);
-  params_array.push(offset);
-
   // 4. Execute query
-  const results = await prisma.$queryRawUnsafe(sql, ...params_array);
+  const results = await prisma.$queryRawUnsafe(sql, ...paramsArray);
 
   // 5. Transform and calculate match scores (0-100 scale)
   return (results as any[]).map((row) => ({
     candidateId: row.candidate_id,
     resumeId: row.resumeId,
-    matchScore: Math.round(row.avg_similarity * 100),
-    name: row.candidate_name,
+    resumeUrl: row.resume_url || undefined,
+    matchScore: Math.max(0, Math.min(100, Math.round(row.avg_similarity * 100))),
+    name: row.candidate_name || "Unknown Candidate",
     email: row.candidate_email,
     relevantChunks: (row.relevant_chunks || []).slice(0, 5),
     appliedAt: row.applied_at ? new Date(row.applied_at) : undefined,

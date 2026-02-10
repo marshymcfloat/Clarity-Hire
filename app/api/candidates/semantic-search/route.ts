@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { SemanticSearchSchema } from "@/lib/validation/search";
 import { semanticSearch } from "@/lib/rag/retrieval";
 import { logCandidateAccess } from "@/lib/rag/audit";
+import { getRecruiterContext, JOB_MANAGEMENT_ROLES } from "@/lib/security";
 import {
   getCachedSearchResults,
   setCachedSearchResults,
@@ -55,52 +56,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Get user's company and role
-    const { prisma } = await import("@/lib/prisma");
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        Company: {
-          select: {
-            id: true,
-          },
-        },
-        CompanyMember: {
-          select: {
-            companyId: true,
-            role: true,
-          },
-        },
-      },
+    // 2. Resolve recruiter/company access
+    const access = await getRecruiterContext(session.user.id, {
+      allowedMemberRoles: JOB_MANAGEMENT_ROLES,
     });
 
-    // Check if user owns a company or is a company memberww
-    const companyId = user?.Company?.id || user?.CompanyMember?.[0]?.companyId;
-    const userRole = user?.Company?.id
-      ? "OWNER"
-      : user?.CompanyMember?.[0]?.role;
-
-    if (!companyId) {
+    if (!access.authorized) {
       return NextResponse.json(
-        { error: "Forbidden", message: "You must be part of a company" },
-        { status: 403 },
-      );
-    }
-
-    // Check authorization - only owners and admins can search
-    if (!["OWNER", "ADMIN"].includes(userRole || "")) {
-      return NextResponse.json(
-        {
-          error: "Forbidden",
-          message: "Only company owners and admins can search candidates",
-        },
+        { error: "Forbidden", message: access.error },
         { status: 403 },
       );
     }
 
     // 3. Rate limiting (20 req/min per company)
-    const rateLimitKey = `search:${companyId}`;
+    const rateLimitKey = `search:${access.companyId}`;
     const rateLimit = await checkRateLimit(rateLimitKey, 20, 60);
 
     // Add rate limit headers
@@ -138,6 +107,25 @@ export async function POST(req: NextRequest) {
 
     const { query, jobId, filters, limit, offset } = validation.data;
 
+    // 5.5. Ensure job belongs to the recruiter's company when provided
+    if (jobId) {
+      const { prisma } = await import("@/lib/prisma");
+      const job = await prisma.job.findFirst({
+        where: { id: jobId, companyId: access.companyId },
+        select: { id: true },
+      });
+
+      if (!job) {
+        return NextResponse.json(
+          {
+            error: "Forbidden",
+            message: "Invalid job context for your company",
+          },
+          { status: 403, headers },
+        );
+      }
+    }
+
     // 5. Check cache (hash query + filters for cache key)
     const cacheKey = crypto
       .createHash("sha256")
@@ -148,7 +136,7 @@ export async function POST(req: NextRequest) {
           filters,
           limit,
           offset,
-          companyId: companyId,
+          companyId: access.companyId,
         }),
       )
       .digest("hex");
@@ -169,7 +157,7 @@ export async function POST(req: NextRequest) {
     // 6. Perform semantic search
     const results = await semanticSearch({
       query,
-      companyId: companyId,
+      companyId: access.companyId,
       jobId,
       filters,
       limit,
@@ -181,7 +169,7 @@ export async function POST(req: NextRequest) {
     await Promise.all(
       results.map((result) =>
         logCandidateAccess({
-          companyId: companyId,
+          companyId: access.companyId,
           userId: session.user.id,
           candidateId: result.candidateId,
           action: "SEARCH",

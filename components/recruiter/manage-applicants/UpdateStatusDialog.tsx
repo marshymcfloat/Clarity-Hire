@@ -44,6 +44,7 @@ export default function UpdateStatusDialog({
       await updateApplicationStatus(applicationId, status);
       toast.success("Status updated successfully");
       onOpenChange(false);
+    } catch {
       toast.error("Failed to update status");
     } finally {
       setLoading(false);

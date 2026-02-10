@@ -1,7 +1,10 @@
 import { MatchReport } from "@/components/candidates/MatchReport";
-import { prisma } from "@/prisma/prisma";
-import { notFound } from "next/navigation";
+import { authOptions } from "@/lib/auth";
 import { generateMatchReport } from "@/lib/rag/match-report";
+import { getRecruiterContext, JOB_MANAGEMENT_ROLES } from "@/lib/security";
+import { prisma } from "@/prisma/prisma";
+import { getServerSession } from "next-auth";
+import { notFound } from "next/navigation";
 
 interface MatchReportPageProps {
   params: Promise<{ candidateId: string }>;
@@ -9,6 +12,11 @@ interface MatchReportPageProps {
 }
 
 export default async function MatchReportPage(props: MatchReportPageProps) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    notFound();
+  }
+
   const searchParams = await props.searchParams;
   const params = await props.params;
 
@@ -28,27 +36,37 @@ export default async function MatchReportPage(props: MatchReportPageProps) {
     );
   }
 
-  // Fetch Candidate and Job Metadata for display
-  const [candidate, job] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: candidateId },
-      select: { name: true, email: true },
-    }),
-    prisma.job.findUnique({
-      where: { id: jobId },
-      select: { title: true },
-    }),
-  ]);
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    select: { title: true, companyId: true },
+  });
 
-  if (!candidate || !job) {
+  if (!job) {
+    notFound();
+  }
+
+  const access = await getRecruiterContext(session.user.id, {
+    companyId: job.companyId,
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
+
+  if (!access.authorized) {
+    notFound();
+  }
+
+  const candidate = await prisma.user.findUnique({
+    where: { id: candidateId },
+    select: { name: true, email: true },
+  });
+
+  if (!candidate) {
     notFound();
   }
 
   try {
-    const report = await generateMatchReport(candidateId, jobId);
-
-    // Transform report to UI props
-    // matchReportSchema from lib/rag/match-report.ts
+    const report = await generateMatchReport(candidateId, jobId, {
+      companyId: access.companyId,
+    });
 
     const reportData = {
       matchScore: report.score,
@@ -56,7 +74,6 @@ export default async function MatchReportPage(props: MatchReportPageProps) {
         skillsMatch: report.skillsMatch,
         experienceMatch: {
           ...report.experienceMatch,
-          // Ensure relevantRoles is string[]
           relevantRoles: report.experienceMatch.relevantRoles,
         },
         educationMatch: report.educationMatch,

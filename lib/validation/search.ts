@@ -32,6 +32,7 @@ export type SemanticSearchInput = z.infer<typeof SemanticSearchSchema>;
 export const SearchResultItemSchema = z.object({
   candidateId: z.string(),
   resumeId: z.string(),
+  resumeUrl: z.string().url().optional(),
   matchScore: z.number().min(0).max(100),
   name: z.string(),
   email: z.string().email(),

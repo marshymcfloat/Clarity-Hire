@@ -25,7 +25,9 @@ export type ExperienceLevel =
 
 export const JobStatus = {
   DRAFT: "DRAFT",
+  PENDING_REVIEW: "PENDING_REVIEW",
   PUBLISHED: "PUBLISHED",
+  REJECTED: "REJECTED",
   ARCHIVED: "ARCHIVED",
 } as const;
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
@@ -215,7 +217,9 @@ export const WORK_ARRANGEMENT_MAP: Record<WorkArrangement, string> = {
 
 export const JOB_STATUS_MAP: Record<JobStatus, string> = {
   DRAFT: "Draft",
+  PENDING_REVIEW: "Pending Review",
   PUBLISHED: "Published",
+  REJECTED: "Rejected",
   ARCHIVED: "Archived",
 };
 

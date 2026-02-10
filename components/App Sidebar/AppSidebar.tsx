@@ -8,6 +8,8 @@ import {
   Loader2,
   LayoutDashboard,
   Building2,
+  Search,
+  type LucideIcon,
 } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 
@@ -30,7 +32,9 @@ import ProgressLink from "../ui/ProgressLink";
 import { useEffect, useState } from "react";
 
 export function AppSidebar() {
-  const { companySlug } = useParams();
+  const params = useParams<{ companySlug?: string }>();
+  const routeCompanySlug =
+    typeof params.companySlug === "string" ? params.companySlug : undefined;
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
@@ -42,10 +46,50 @@ export function AppSidebar() {
   // Securely define items based on role
   const getSidebarItems = () => {
     if (status !== "authenticated" || !session?.user) return null;
+    const companySlug = routeCompanySlug || session.user.activeCompanySlug;
+
+    const groups: {
+      label: string;
+      items: { title: string; url: string; icon: LucideIcon }[];
+    }[] = [];
+
+    if (session.user.isPlatformAdmin) {
+      groups.push({
+        label: "Platform Admin",
+        items: [
+          {
+            title: "Companies",
+            url: "/admin/companies",
+            icon: Building2,
+          },
+          {
+            title: "Jobs Review",
+            url: "/admin/jobs",
+            icon: Briefcase,
+          },
+          {
+            title: "Audit Log",
+            url: "/admin/audit",
+            icon: ClipboardList,
+          },
+        ],
+      });
+    }
 
     if (session.user.isRecruiter) {
-      return [
-        {
+      if (!companySlug || !session.user.memberId) {
+        groups.push({
+          label: "Management",
+          items: [
+            {
+              title: "Candidate Search",
+              url: "/candidates/search",
+              icon: Search,
+            },
+          ],
+        });
+      } else {
+        groups.push({
           label: "Management",
           items: [
             {
@@ -63,10 +107,21 @@ export function AppSidebar() {
               url: `/${companySlug}/${session.user.memberId}/manage-applicants`,
               icon: Users,
             },
+            {
+              title: "Candidate Search",
+              url: "/candidates/search",
+              icon: Search,
+            },
           ],
-        },
-      ];
+        });
+      }
     }
+
+    if (groups.length > 0) {
+      return groups;
+    }
+
+    if (!companySlug) return null;
 
     return [
       {

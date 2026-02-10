@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { JOB_MANAGEMENT_ROLES } from "@/lib/security";
+import { requireRecruiterAccess } from "@/lib/server-auth";
 
 export async function toggleSaveJob(jobId: string) {
   const session = await getServerSession(authOptions);
@@ -49,24 +51,14 @@ export async function toggleSaveJob(jobId: string) {
 }
 
 export async function getCompanyJobsAction() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return [];
-
-  const { prisma } = await import("@/lib/prisma"); // Dynamic import to avoid circular dep issues if any, or just consistent
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      Company: { select: { id: true } },
-      CompanyMember: { select: { companyId: true, role: true } },
-    },
+  const auth = await requireRecruiterAccess({
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
   });
 
-  const companyId = user?.Company?.id || user?.CompanyMember?.[0]?.companyId;
-  if (!companyId) return [];
+  if (!auth.authorized) return [];
 
   const jobs = await prisma.job.findMany({
-    where: { companyId, status: "PUBLISHED" },
+    where: { companyId: auth.access.companyId, status: "PUBLISHED" },
     select: { id: true, title: true },
     orderBy: { createdAt: "desc" },
   });

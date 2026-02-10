@@ -5,6 +5,7 @@ import { prisma } from "@/prisma/prisma";
 import { ApplicationStatus } from "@/lib/generated/prisma/client";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { getRecruiterContext, JOB_MANAGEMENT_ROLES } from "@/lib/security";
 
 export async function updateApplicationStatus(
   applicationId: string,
@@ -12,7 +13,7 @@ export async function updateApplicationStatus(
 ) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id || !session.user.activeCompanyId) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -31,8 +32,13 @@ export async function updateApplicationStatus(
     throw new Error("Application not found");
   }
 
-  if (application.Job.companyId !== session.user.activeCompanyId) {
-    throw new Error("Unauthorized: Application belongs to another company");
+  const access = await getRecruiterContext(session.user.id, {
+    companyId: application.Job.companyId,
+    allowedMemberRoles: JOB_MANAGEMENT_ROLES,
+  });
+
+  if (!access.authorized) {
+    throw new Error(access.error);
   }
 
   await prisma.application.update({
@@ -40,8 +46,12 @@ export async function updateApplicationStatus(
     data: { status: newStatus },
   });
 
-  revalidatePath(
-    "/(recruiter)/[companySlug]/[memberId]/manage-applicants",
-    "page",
-  );
+  if (access.companySlug && session.user.memberId) {
+    revalidatePath(
+      `/${access.companySlug}/${session.user.memberId}/manage-applicants`,
+      "page",
+    );
+  } else {
+    revalidatePath("/", "layout");
+  }
 }

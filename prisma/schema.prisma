@@ -63,28 +63,44 @@ model ApplicationAnswer {
 }
 
 model Company {
-  id                  String                 @id @default(cuid())
-  name                String
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
-  coverImage          String?
-  description         String
-  image               String?
-  location            String
-  slug                String                 @unique
-  websiteUrl          String?
-  ownerId             String                 @unique
-  plan                String                 @default("free")
-  stripeCustomerId    String?                @unique
-  companySize         CompanySize?
-  ragQuotaUsed        Int                    @default(0)
-  ragCostMtd          Float                  @default(0)
-  User                User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  CompanyMember       CompanyMember[]
-  Job                 Job[]
-  Question            Question[]
-  CandidateAccessLog  CandidateAccessLog[]
-  RAGMetrics          RAGMetrics[]
+  id                           String                    @id @default(cuid())
+  name                         String
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime                  @updatedAt
+  coverImage                   String?
+  description                  String
+  image                        String?
+  location                     String
+  slug                         String                    @unique
+  websiteUrl                   String?
+  ownerId                      String                    @unique
+  verificationStatus           CompanyVerificationStatus @default(PENDING)
+  verificationRequestedAt      DateTime?
+  verifiedAt                   DateTime?
+  verifiedByUserId             String?
+  verificationReason           String?
+  suspendedAt                  DateTime?
+  suspensionReason             String?
+  plan                         String                    @default("free")
+  billingStatus                BillingStatus             @default(NONE)
+  subscriptionCurrentPeriodEnd DateTime?
+  activePublishedJobsLimit     Int?
+  stripeCustomerId             String?                   @unique
+  companySize                  CompanySize?
+  ragQuotaUsed                 Int                       @default(0)
+  ragCostMtd                   Float                     @default(0)
+  User                         User                      @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  VerifiedBy                   User?                     @relation("CompanyVerifiedBy", fields: [verifiedByUserId], references: [id])
+  CompanyMember                CompanyMember[]
+  Job                          Job[]
+  Question                     Question[]
+  CandidateAccessLog           CandidateAccessLog[]
+  RAGMetrics                   RAGMetrics[]
+  AdminAuditLog                AdminAuditLog[]
+
+  @@index([verificationStatus])
+  @@index([verifiedByUserId])
+  @@index([billingStatus])
 }
 
 model CompanyMember {
@@ -103,11 +119,11 @@ model CompanyMember {
 }
 
 model Job {
-  id                String               @id @default(cuid())
+  id                String              @id @default(cuid())
   title             String
   companyId         String
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
   department        String
   experienceLevel   ExperienceLevel
   jobType           JobType
@@ -118,18 +134,35 @@ model Job {
   qualifications    String[]
   responsibilities  String[]
   skills            String[]
-  workArrangement   WorkArrangement      @default(ON_SITE)
+  workArrangement   WorkArrangement     @default(ON_SITE)
   workSchedule      String?
   summary           String
-  status            JobStatus            @default(DRAFT)
-  jobEmbeddingId    String?              @unique
+  status            JobStatus           @default(DRAFT)
+  jobEmbeddingId    String?             @unique
   Application       Application[]
-  Company           Company              @relation(fields: [companyId], references: [id])
+  Company           Company             @relation(fields: [companyId], references: [id])
   QuestionOnJob     QuestionOnJob[]
   SavedJob          SavedJob[]
   CandidateJobMatch CandidateJobMatch[]
 }
 
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String
+  action      String
+  targetType  String
+  targetId    String
+  reason      String?
+  metadata    Json?
+  companyId   String?
+  createdAt   DateTime @default(now())
+  Actor       User     @relation("AdminActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  Company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId])
+  @@index([companyId, createdAt])
+}
 
 model Question {
   id                String              @id @default(cuid())
@@ -147,7 +180,6 @@ model Question {
   @@index([companyId])
 }
 
-
 model QuestionOnJob {
   jobId      String
   questionId String
@@ -162,7 +194,7 @@ model QuestionOnJob {
 }
 
 model Resume {
-  id             String          @id @default(cuid())  
+  id             String          @id @default(cuid())
   name           String
   userId         String
   url            String
@@ -224,37 +256,37 @@ model DocumentChunk {
 }
 
 model Embedding {
-  id             String        @id @default(cuid())
-  chunkId        String        @unique
+  id             String                     @id @default(cuid())
+  chunkId        String                     @unique
   vector         Unsupported("vector(768)") // pgvector type for 768-dimensional embeddings
   contentHash    String
   modelVersionId String
   metadata       Json?
-  createdAt      DateTime      @default(now())
-  DocumentChunk  DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  createdAt      DateTime                   @default(now())
+  DocumentChunk  DocumentChunk              @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
   @@index([contentHash, modelVersionId])
 }
 
 model CandidateJobMatch {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   candidateId    String
   jobId          String
   matchScore     Int
-  fitSummary     String?  @db.Text
+  fitSummary     String?   @db.Text
   pros           String[]
   cons           String[]
   missingReqs    String[]
   evidence       Json?
   interviewKit   Json?
-  scoredAt       DateTime @default(now())
+  scoredAt       DateTime  @default(now())
   expiresAt      DateTime?
-  isSaved        Boolean  @default(false)
+  isSaved        Boolean   @default(false)
   scoringVersion String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  Candidate      User     @relation("CandidateJobMatch", fields: [candidateId], references: [id])
-  Job            Job      @relation(fields: [jobId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Candidate      User      @relation("CandidateJobMatch", fields: [candidateId], references: [id])
+  Job            Job       @relation(fields: [jobId], references: [id])
 
   @@unique([candidateId, jobId])
   @@index([jobId, matchScore])
@@ -286,24 +318,27 @@ model RAGMetrics {
 }
 
 model User {
-  id                   String                 @id @default(cuid())
-  email                String                 @unique
-  name                 String?
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  username             String?                @unique
-  image                String?
-  emailVerified        DateTime?
-  hashedPassword       String?
-  Account              Account[]
-  Application          Application[]
-  Company              Company?
-  CompanyMember        CompanyMember[]
-  Resume               Resume[]
-  SavedJob             SavedJob[]
-  CandidateJobMatch    CandidateJobMatch[]    @relation("CandidateJobMatch")
-  AccessorLogs         CandidateAccessLog[]   @relation("Accessor")
-  CandidateAccessLog   CandidateAccessLog[]   @relation("CandidateAccessLog")
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  role               UserRole             @default(USER)
+  username           String?              @unique
+  image              String?
+  emailVerified      DateTime?
+  hashedPassword     String?
+  Account            Account[]
+  Application        Application[]
+  Company            Company?             @relation("CompanyOwner")
+  VerifiedCompanies  Company[]            @relation("CompanyVerifiedBy")
+  CompanyMember      CompanyMember[]
+  Resume             Resume[]
+  SavedJob           SavedJob[]
+  CandidateJobMatch  CandidateJobMatch[]  @relation("CandidateJobMatch")
+  AccessorLogs       CandidateAccessLog[] @relation("Accessor")
+  CandidateAccessLog CandidateAccessLog[] @relation("CandidateAccessLog")
+  AdminAuditLogs     AdminAuditLog[]      @relation("AdminActor")
 }
 
 enum ApplicationStatus {
@@ -336,7 +371,9 @@ enum ExperienceLevel {
 
 enum JobStatus {
   DRAFT
+  PENDING_REVIEW
   PUBLISHED
+  REJECTED
   ARCHIVED
 }
 
@@ -360,6 +397,30 @@ enum TeamRole {
   RECRUITER
   HIRING_MANAGER
   MEMBER
+}
+
+enum UserRole {
+  USER
+  PLATFORM_ADMIN
+  OPS_REVIEWER
+}
+
+enum CompanyVerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum BillingStatus {
+  NONE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  UNPAID
+  CANCELED
+  PAUSED
 }
 
 enum WorkArrangement {

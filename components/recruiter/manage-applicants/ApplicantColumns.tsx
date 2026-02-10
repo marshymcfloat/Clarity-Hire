@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, FileText, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, FileText, MoreHorizontal, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,11 +24,13 @@ export type Applicant = {
   id: string;
   status: ApplicationStatus;
   createdAt: Date;
+  processedForRAG: boolean;
   Job: {
     title: string;
     id: string;
   };
   User: {
+    id: string;
     name: string | null;
     email: string;
     image: string | null;
@@ -119,6 +121,25 @@ export const applicantColumns: ColumnDef<Applicant>[] = [
     },
   },
   {
+    accessorKey: "processedForRAG",
+    header: "AI Status",
+    cell: ({ row }) => {
+      const ready = row.getValue("processedForRAG") as boolean;
+      return ready ? (
+        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+          Ready
+        </Badge>
+      ) : (
+        <Badge
+          variant="outline"
+          className="text-amber-700 border-amber-300 dark:text-amber-400 dark:border-amber-500/40"
+        >
+          Processing
+        </Badge>
+      );
+    },
+  },
+  {
     accessorKey: "createdAt",
     header: "Applied Date",
     cell: ({ row }) => {
@@ -197,6 +218,21 @@ const ActionCell = ({ application }: { application: Applicant }) => {
             Copy Email
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          {application.processedForRAG ? (
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/candidates/${application.User.id}/match-report?jobId=${application.Job.id}`}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                View Match Report
+              </Link>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled>
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Report Processing
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setOpen(true)}>
             Update Status
           </DropdownMenuItem>
